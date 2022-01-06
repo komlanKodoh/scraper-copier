@@ -3,7 +3,7 @@ Scraper copier is a Command Line Interface (CLI) that replicate remote domain to
 
 ## Instalation 
 The Installation of  **scraper copier** can be completed by following the following steps.
-
+Note: We assume that you have both **node** and **npm** installed.
  1. Clone repository from github and cd into the repository
 ```bash
 git clone https://github.com/Behemoth11/scraper-copier.git && 
