@@ -1,4 +1,5 @@
 export default (link: string, url: URL, add_to: string[]) => {
+
   if (
     !link ||
     link[0] === "#" ||

@@ -1,7 +1,5 @@
 import formatLink from "../lib/formatLink";
 
-require("dotenv").config();
-
 const R = process.env.ROOT;
 
 const tests = [

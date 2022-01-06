@@ -19,6 +19,7 @@ const formatLink_1 = __importDefault(require("./formatLink"));
 const writeFile_1 = __importDefault(require("./writeFile"));
 const connect_1 = __importDefault(require("../connect"));
 const path_1 = __importDefault(require("path"));
+const Logger_1 = __importDefault(require("../classes/Logger"));
 const fs = require("fs");
 const axios = require("axios");
 const cheerio = require("cheerio");
@@ -26,19 +27,25 @@ exports.default = (url, axios_request) => __awaiter(void 0, void 0, void 0, func
     connect_1.default.see(url);
     const parsedUrl = new URL(url);
     const [web_path, fileName] = (0, getPathAndFileName_1.default)(url);
-    if (!fs.existsSync(web_path))
-        fs.mkdirSync(web_path, { recursive: true });
     const fileExtension = (0, utils_1.getFileExtension)(fileName);
+    try {
+        if (!fs.existsSync(web_path))
+            fs.mkdirSync(web_path, { recursive: true });
+    }
+    catch (err) {
+        Logger_1.default.error(fileExtension, url, `could not create file ${web_path}`);
+        return;
+    }
     axios_request.current++;
     const response = yield axios
         .get(url)
-        .catch((err) => console.log(`Unable to find ${parsedUrl}`));
+        .catch((err) => Logger_1.default.error(fileExtension, url, `Not Found`));
     if (!response)
         return;
     let link_to_save = [];
     if (["png", "jpg", "jpeg", "gif", "svg"].includes(fileExtension)) {
         yield (0, downloadImg_1.default)(url, path_1.default.join(web_path, fileName), () => {
-            console.log(`\x1b[37m- Image (${fileExtension}) : ${url}\n   |_ \x1b[32m ${path_1.default.join(web_path, fileName)}\n`);
+            Logger_1.default.info(fileExtension, url, web_path, fileName);
         });
         return;
     }
@@ -78,6 +85,6 @@ exports.default = (url, axios_request) => __awaiter(void 0, void 0, void 0, func
         // console.log("new links added : ", link_to_save.slice(0, 40));
     }
     yield (0, writeFile_1.default)(response.data, web_path, fileName);
-    console.log(`\x1b[37m- File (${fileExtension}) : ${url}\n   |_ \x1b[32m${path_1.default.join(web_path, fileName)}\n`);
+    Logger_1.default.info(fileExtension, url, web_path, fileName);
 });
 //# sourceMappingURL=cloneFile.js.map

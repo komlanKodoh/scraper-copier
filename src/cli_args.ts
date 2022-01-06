@@ -1,20 +1,22 @@
 const yargs = require("yargs");
 
 const cli_args = yargs
-  .command("load", "Load a page from remote url to your given location", {
-    url: {
-      description: "url of the website to be scanned",
-      alias: "u",
-      type: "array",
-      required: true,
-    },
-    dest: {
-      description: "folder destination of the content",
-      alias: "d",
-      type: "string"
+  .command(
+    "load <url> [dest]",
+    "load domain starting from url to given destination",
+    (yargs) => {
+      yargs
+        .positional("url", {
+          describe: "URL to fetch content from",
+          type: "array",
+          default: "http://www.google.com",
+        })
+        .positional("dest", {
+          describe: "destination folder",
+          default: "."
+        });
     }
-  })
-  .command("")
+  )
   .option("light", {
     alias: "l",
     description: "reduces the amount of information logged to the console",

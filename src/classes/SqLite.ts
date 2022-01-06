@@ -75,7 +75,7 @@ export default class implements DbManager {
           if (err) {
             console.error(err);
           }
-          console.log("Successful connection to sqlite database");
+          console.log("Successful connection to sqlite database\n");
           resolve();
         }
       );

@@ -1,5 +1,4 @@
-// import { getFileExtension } from "../utils/index";
-require("dotenv").config();
+
 const path = require("path");
 
 export const getFileExtension = (fileName: string, if_none?: string) => {

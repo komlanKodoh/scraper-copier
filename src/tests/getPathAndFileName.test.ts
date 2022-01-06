@@ -1,6 +1,5 @@
 import path from "path";
 import getPathAndFileName from "../lib/getPathAndFileName";
-require("dotenv").config();
 
 const R = global._target_directory;
 

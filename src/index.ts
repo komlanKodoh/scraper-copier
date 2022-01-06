@@ -2,6 +2,7 @@
 
 import scrapper from "./scrapper";
 import cli_args from "./cli_args";
+import { castArray } from "./utils";
 
 if (cli_args.dest && !global._target_directory) {
   global._target_directory = cli_args.dest;
@@ -13,4 +14,5 @@ if (!cli_args.url) {
   process.exit()
 }
 
-scrapper.start(cli_args.url);
+
+scrapper.start(castArray(cli_args.url));

@@ -5,6 +5,7 @@ import formatLink from "./formatLink";
 import writeFile from "./writeFile";
 import db from "../connect";
 import path from "path";
+import Logger from "../classes/Logger";
 
 const fs = require("fs");
 const axios = require("axios");
@@ -16,14 +17,21 @@ export default async (url: string, axios_request: { current: number }) => {
   const parsedUrl = new URL(url);
 
   const [web_path, fileName] = getPathAndFileName(url);
-  if (!fs.existsSync(web_path)) fs.mkdirSync(web_path, { recursive: true });
-
   const fileExtension = getFileExtension(fileName);
+
+  try {
+    if (!fs.existsSync(web_path)) fs.mkdirSync(web_path, { recursive: true });
+  } catch (err) {
+
+    Logger.error(fileExtension, url, `could not create file ${web_path}`)
+    return;
+  }
+
 
   axios_request.current++;
   const response = await axios
     .get(url)
-    .catch((err) => console.log(`Unable to find ${parsedUrl}`));
+    .catch((err) => Logger.error(fileExtension, url, `Not Found`));
 
   if (!response) return;
 
@@ -31,12 +39,7 @@ export default async (url: string, axios_request: { current: number }) => {
 
   if (["png", "jpg", "jpeg", "gif", "svg"].includes(fileExtension)) {
     await downloadImg(url, path.join(web_path, fileName), () => {
-      console.log(
-        `\x1b[37m- Image (${fileExtension}) : ${url}\n   |_ \x1b[32m ${path.join(
-          web_path,
-          fileName
-        )}\n`
-      );
+      Logger.info(fileExtension, url, web_path, fileName);
     });
     return;
   } else if (["html", "htm"].includes(fileExtension)) {
@@ -83,10 +86,5 @@ export default async (url: string, axios_request: { current: number }) => {
 
   await writeFile(response.data, web_path, fileName);
 
-  console.log(
-    `\x1b[37m- File (${fileExtension}) : ${url}\n   |_ \x1b[32m${path.join(
-      web_path,
-      fileName
-    )}\n`
-  );
+  Logger.info(fileExtension, url, web_path, fileName);
 };

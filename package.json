@@ -8,7 +8,8 @@
     "dev": "ts-node ./src/index.ts load -u https://komlankodoh.com -d ./ROOT_MASTER",
     "init": "sudo docker build -t server_mysql .",
     "start": "ts-node src/index.ts",
-    "build": "tsc && webpack ./dist/index.js -o ./build/scraper.js"
+    "mytest": "tsc && scraper load https://google.com .",
+    "build": "tsc"
   },
   "bin": {
     "scraper": "./dist/index.js"
@@ -18,16 +19,14 @@
   "dependencies": {
     "axios": "^0.23.0",
     "cheerio": "^1.0.0-rc.10",
-    "dotenv": "^10.0.0",
-    "log-beautify": "^1.2.0",
     "mysql2": "^2.3.3",
-    "nodemon": "^2.0.14",
     "sqlite3": "^5.0.2",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.5.4",
     "yargs": "^17.3.1"
   },
   "devDependencies": {
+    "nodemon": "^2.0.14",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4",
     "@babel/preset-env": "^7.16.5",
     "@babel/preset-typescript": "^7.16.5",
     "@types/cheerio": "^0.22.30",

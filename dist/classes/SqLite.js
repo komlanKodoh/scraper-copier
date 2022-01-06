@@ -58,11 +58,11 @@ class default_1 {
         };
         this.init = (...links) => __awaiter(this, void 0, void 0, function* () {
             yield new Promise((resolve) => {
-                this.db = new sqlite3.Database(path.join(process.cwd(), "sqlite.db"), (err) => {
+                this.db = new sqlite3.Database(path.join(process.cwd(), ".sqlite.db"), (err) => {
                     if (err) {
                         console.error(err);
                     }
-                    console.log("Successful connection to sqlite database");
+                    console.log("Successful connection to sqlite database\n");
                     resolve();
                 });
             });
@@ -86,7 +86,6 @@ class default_1 {
                 VALUES ${values}
                 ON CONFLICT(link) DO UPDATE SET popularity = popularity + 1;
                 `, (error) => {
-                    console.log("Database Initialization complete.\n");
                     resolve();
                 });
             });

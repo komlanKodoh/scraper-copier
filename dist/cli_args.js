@@ -2,18 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const yargs = require("yargs");
 const cli_args = yargs
-    .command("load", "Load a page from remote url to your given location", {
-    url: {
-        description: "url of the website to be scanned",
-        alias: "u",
+    .command("load <url> [dest]", "load domain starting from url to given destination", (yargs) => {
+    yargs
+        .positional("url", {
+        describe: "URL to fetch content from",
         type: "array",
-        required: true,
-    },
-    dest: {
-        description: "folder destination of the content",
-        alias: "d",
-        type: "string"
-    }
+        default: "http://www.google.com",
+    })
+        .positional("dest", {
+        describe: "destination folder",
+        default: "."
+    });
 })
     .option("light", {
     alias: "l",

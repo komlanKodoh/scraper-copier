@@ -22,7 +22,7 @@ const clone_n_path = async (n) => {
   return true;
 };
 
-const start = async (target_url: []) => {
+const start = async (target_url: string[]) => {
   await  db.init(...target_url)
 
   const MAX_RUN_TIME = 10;

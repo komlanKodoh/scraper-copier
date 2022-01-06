@@ -17,4 +17,6 @@ export const createInsertValues = (links) => {
   return values as string;
 };
 
-// export const make_query_sync = ()
+export const castArray = (arg: string | []): string[] => {
+  return Array.isArray(arg) ? arg : [arg];
+}

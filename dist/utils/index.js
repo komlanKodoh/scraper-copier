@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createInsertValues = exports.getFileExtension = void 0;
+exports.castArray = exports.createInsertValues = exports.getFileExtension = void 0;
 const getFileExtension = (fileName, if_none) => {
     const temp_arr = fileName.split(".");
     if (temp_arr.length >= 2)
@@ -19,5 +19,8 @@ const createInsertValues = (links) => {
     return values;
 };
 exports.createInsertValues = createInsertValues;
-// export const make_query_sync = ()
+const castArray = (arg) => {
+    return Array.isArray(arg) ? arg : [arg];
+};
+exports.castArray = castArray;
 //# sourceMappingURL=index.js.map
