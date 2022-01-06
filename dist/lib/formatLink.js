@@ -2,13 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = (link, url, add_to) => {
     if (!link ||
-        link[0] == "#" ||
-        link.slice(0, 4) == "tel:" ||
-        link.slice(0, 5) == "http:" ||
-        link.slice(0, 6) == "https:" ||
-        link.slice(0, 7) == "mailto:")
+        link[0] === "#" ||
+        link.slice(0, 4) === "tel:" ||
+        link.slice(0, 5) === "data:" ||
+        link.slice(0, 5) === "http:" ||
+        link.slice(0, 6) === "https:" ||
+        link.slice(0, 7) === "mailto:")
         return;
-    const href = url.href.replace(/\/$/, '');
+    const href = url.href.replace(/\/$/, "");
+    if (link.length >= 185)
+        return;
     if (link[0] == ".") {
         const _link = href + link.slice(1);
         add_to.push(_link);

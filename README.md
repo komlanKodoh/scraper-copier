@@ -1,0 +1,1 @@
+`daniel is the person that is currently typing in front of you`
