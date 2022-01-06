@@ -1,8 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFileExtension = void 0;
-// import { getFileExtension } from "../utils/index";
-require("dotenv").config();
 const path = require("path");
 const getFileExtension = (fileName, if_none) => {
     const temp_arr = fileName.split(".");

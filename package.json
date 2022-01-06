@@ -12,7 +12,7 @@
     "build": "tsc"
   },
   "bin": {
-    "scraper": "./dist/index.js"
+    "scrap": "./dist/index.js"
   },
   "author": "",
   "license": "ISC",

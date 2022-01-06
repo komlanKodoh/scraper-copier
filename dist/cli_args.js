@@ -7,7 +7,7 @@ const cli_args = yargs
         .positional("url", {
         describe: "URL to fetch content from",
         type: "array",
-        default: "http://www.google.com",
+        default: "http://komlankodoh.com",
     })
         .positional("dest", {
         describe: "destination folder",

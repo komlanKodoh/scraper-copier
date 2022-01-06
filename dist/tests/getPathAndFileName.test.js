@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = __importDefault(require("path"));
 const getPathAndFileName_1 = __importDefault(require("../lib/getPathAndFileName"));
-require("dotenv").config();
 const R = global._target_directory;
 const tests = [
     {
