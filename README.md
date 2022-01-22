@@ -18,7 +18,7 @@ At that point, you should be able to run the node script located in the **dist**
 ```bash
 node ./dist/index.js
 ```
-
+[Link to video tutorial](https://res.cloudinary.com/dkoatnxem/video/upload/v1641495182/out-2_1_1_j4iz1j.mp4)
 ## Passing argument to process
 
 Argument can be passed to the node process as you would for any other CLI.
