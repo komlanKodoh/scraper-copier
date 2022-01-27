@@ -11,8 +11,8 @@ if (cli_args_1.default.dest && !global._target_directory) {
     global._target_directory = cli_args_1.default.dest;
 }
 if (!cli_args_1.default.url) {
-    console.log("Hello, welcome to scraper interface.");
-    console.log('execute the command "scraper --help" for more information.');
+    console.log("\nHello, welcome to scraper interface.");
+    console.log('\nexecute the command "--help" for more information.');
     process.exit();
 }
 scrapper_1.default.start((0, utils_1.castArray)(cli_args_1.default.url));

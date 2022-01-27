@@ -50,22 +50,22 @@ export default async (url: string, axios_request: { current: number }) => {
     const meta_links: string = $("link");
     const image_links: string = $("img");
 
-    $(meta_links).each((i, meta_link) => {
+    $(meta_links).each((_, meta_link) => {
       const _meta_link = $(meta_link).attr("href");
       formatLink(_meta_link, parsedUrl, link_to_save);
     });
 
-    $(script).each((i, script) => {
+    $(script).each((_, script) => {
       const _script = $(script).attr("src");
       formatLink(_script, parsedUrl, link_to_save);
     });
 
-    $(links).each(function (i, link) {
+    $(links).each(function (_, link) {
       const _link = $(link).attr("href");
       formatLink(_link, parsedUrl, link_to_save);
     });
 
-    $(image_links).each(function (i, image_link) {
+    $(image_links).each(function (_, image_link) {
       const _image_link = $(image_link).attr("src");
       formatLink(_image_link, parsedUrl, link_to_save);
     });

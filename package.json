@@ -1,5 +1,5 @@
 {
-  "name": "haka",
+  "name": "d",
   "version": "1.0.0",
   "description": "replicating server file structure on my computer",
   "main": "./dist/index.js",
@@ -12,7 +12,7 @@
     "build": "tsc"
   },
   "bin": {
-    "scrap": "./dist/index.js"
+    "scraper": "dist/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -36,5 +36,16 @@
     "jest": "^27.4.5",
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Behemoth11/scraper-copier.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Behemoth11/scraper-copier/issues"
+  },
+  "homepage": "https://github.com/Behemoth11/scraper-copier#readme"
 }

@@ -5,18 +5,28 @@ import { sql } from "../utils/sql";
 import DbManager from "./DbManagerInterface";
 const path = require("path");
 
-export default class implements DbManager {
-  db: any;
+
+/**
+ * @class SqLite DataAccessObject ;
+ */
+export default class SqLite implements DbManager {
+  db: typeof sqlite3.Database;
   name: string;
 
   constructor() {
     this.db = {};
-    this.name = "sqlite"
+    this.name = "sqlite";
   }
 
+  /**
+   * A list of links that will be added to the database;
+   * 
+   * @param links links to add to database
+   * @returns a promise;
+   */
   public add = (links: string[]) => {
     return new Promise((resolve, reject) => {
-      if (links.length === 0) return resolve("nothing");
+      if (links.length === 0) return resolve();
 
       this.db.run(
         `
@@ -28,26 +38,38 @@ export default class implements DbManager {
           if (error) {
             console.error(error);
           }
-          resolve("row");
+          resolve();
         }
       );
-    }) as Promise<string>;
+    }) as Promise<void>;
   };
 
+  /**
+   * Delete link from mysql database
+   * 
+   * @param link A link that will be deleted from the mysql database
+   * @returns A promise
+   */
   public delete = (link: string) => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.db.query(
         `
               DELETE FROM link WHERE link="${link}";
               `,
         (error, row) => {
-          resolve(row);
+          resolve();
         }
       );
     });
   };
 
-  public find_next = (limit: number) => {
+  /**
+   * Find next n = limit link that can be scrapped
+   * 
+   * @param limit maximum number of link to get;
+   * @returns a promise with link object
+   */
+  public find_next = (limit?: number) => {
     return new Promise((resolve, reject) => {
       this.db.all(
         `
@@ -55,7 +77,7 @@ export default class implements DbManager {
               FROM link 
               WHERE seen = 0
               ORDER BY popularity DESC
-              LIMIT ${limit}
+              LIMIT ${limit || 5000}
           `,
         (err, rows: link[]) => {
           if (!rows) {
@@ -66,6 +88,13 @@ export default class implements DbManager {
       );
     }) as Promise<link[]>;
   };
+
+  /**
+   * Initializes the database by performing basic actions;
+   * 
+   * @param links Initial links of the first pages that will be scrapped at the once the process starts;
+   * @returns A promise;
+   */
 
   public init = async (...links: string[]) => {
     await new Promise<void>((resolve) => {
@@ -115,7 +144,13 @@ export default class implements DbManager {
     return;
   };
 
-  public see = async (location: string) => {
+  /**
+   * Change the visibility of link in the database and sets it as seen. 
+   * 
+   * @param link {String} to set as seen
+   * @returns Promise
+   */
+  public see = async (link: string) => {
     return new Promise<void>((resolve, reject) => {
       this.db.run(
         `

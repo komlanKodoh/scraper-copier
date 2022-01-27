@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = (link, url, add_to) => {
     if (!link ||
         link[0] === "#" ||
+        link.slice(0, 2) === "//" ||
         link.slice(0, 4) === "tel:" ||
         link.slice(0, 5) === "data:" ||
         link.slice(0, 5) === "http:" ||

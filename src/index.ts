@@ -9,8 +9,8 @@ if (cli_args.dest && !global._target_directory) {
 }
 
 if (!cli_args.url) {
-  console.log("Hello, welcome to scraper interface.");
-  console.log('execute the command "scraper --help" for more information.');
+  console.log("\nHello, welcome to scraper interface.");
+  console.log('\nexecute the command "--help" for more information.');
   process.exit()
 }
 

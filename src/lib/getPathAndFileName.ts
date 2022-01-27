@@ -12,11 +12,8 @@ const getPathAndFileName = (url: string) => {
 
   let web_path, filename, file_extension;
 
-  const link = url.match(/^(https*:\/\/)([^#?]*)/)[2];
+  const link = url.match(/^(https*:\/\/)([^#]*)/)[2];
 
-  if (link[link.length-0] === "/"){
-
-  }
 
   let i;
   let len = link.length;

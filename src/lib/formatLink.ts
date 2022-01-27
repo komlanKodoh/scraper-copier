@@ -3,6 +3,7 @@ export default (link: string, url: URL, add_to: string[]) => {
   if (
     !link ||
     link[0] === "#" ||
+    link.slice(0,2) === "//"||
     link.slice(0, 4) === "tel:" ||
     link.slice(0, 5) === "data:" ||
     link.slice(0, 5) === "http:" ||
@@ -11,7 +12,8 @@ export default (link: string, url: URL, add_to: string[]) => {
   )
     return;
 
-  const href = url.href.replace(/\/$/, "");
+  const href = url.href.replace(/(#.*|\/$)/g, "");
+
   if (link.length >= 185) return;
 
   if (link[0] == ".") {
