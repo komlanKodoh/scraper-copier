@@ -1,4 +1,3 @@
-import { link } from './../types/global';
 const sqlite3 = require("sqlite3").verbose();
 import { createInsertValues } from "../utils";
 import { ensurePath } from "../utils/ensurePath";

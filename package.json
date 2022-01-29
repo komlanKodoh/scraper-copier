@@ -42,6 +42,7 @@
   "directories": {
     "test": "test"
   },
+  "types": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Behemoth11/scraper-copier.git"
