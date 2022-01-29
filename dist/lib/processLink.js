@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = __importDefault(require("path"));
 const postProcess = (processedLink) => {
+    console.log(processedLink.replace(/(\/*#.*|\/$)/g, ""));
     return processedLink.replace(/(\/*#.*|\/$)/g, "");
 };
 const processLink = (link, url, add_to, authorize = []) => {
@@ -26,19 +27,15 @@ const processLink = (link, url, add_to, authorize = []) => {
         else
             return;
     }
-    const href = processedURL.protocol + "//" + processedURL.hostname + processedURL.pathname.replace(/\.[a-zA-Z]+$/g, "");
+    const href = processedURL.hostname + processedURL.pathname.replace(/\.[a-zA-Z]+$/g, "");
     if (link.length >= 185)
         return;
-    if (link[0] == ".") {
-        const _link = href + link.slice(1);
-        add_to.push(postProcess(_link));
-    }
-    else if (link[0] == "/") {
+    if (link[0] == "/") {
         const _link = processedURL.origin + link;
         add_to.push(postProcess(_link));
     }
     else {
-        const _link = href + "/" + link;
+        const _link = processedURL.protocol + "//" + path_1.default.join(href, "../", link);
         add_to.push(postProcess(_link));
     }
     return;

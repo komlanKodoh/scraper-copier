@@ -72,6 +72,7 @@ exports.default = (url, axios_request) => __awaiter(void 0, void 0, void 0, func
             const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
             let match = myRegexp.exec(response.data);
             while (match != null) {
+                console.log;
                 (0, processLink_1.default)(match[2], parsedUrl, link_to_save);
                 match = myRegexp.exec(response.data);
             }

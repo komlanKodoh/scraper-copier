@@ -72,6 +72,7 @@ export default async (url: string, axios_request: { current: number }) => {
 
       let match = myRegexp.exec(response.data);
       while (match != null) {
+        console.log
         processLink(match[2], parsedUrl, link_to_save);
         match = myRegexp.exec(response.data);
       }
