@@ -15,9 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const counter_1 = __importDefault(require("./utils/counter"));
 const connect_1 = __importDefault(require("./connect"));
 const cloneFile_1 = __importDefault(require("./lib/cloneFile"));
+const path_1 = __importDefault(require("path"));
 var axios_request = { current: 0 };
 const clone_n_path = (n) => __awaiter(void 0, void 0, void 0, function* () {
-    const nexts = yield connect_1.default.find_next(5);
+    const nexts = yield connect_1.default.find_next(n);
     if (nexts.length === 0) {
         return false;
     }
@@ -25,17 +26,13 @@ const clone_n_path = (n) => __awaiter(void 0, void 0, void 0, function* () {
     yield Promise.all(cloning);
     return true;
 });
-const start = (target_url) => __awaiter(void 0, void 0, void 0, function* () {
-    yield connect_1.default.init(...target_url);
-    const MAX_RUN_TIME = 10;
+const start = (target_url, MAX_RUN_TIME) => __awaiter(void 0, void 0, void 0, function* () {
+    yield connect_1.default.init(target_url, path_1.default.join(__dirname, ".default_scraper.db"));
     const counter = new counter_1.default();
-    for (let i = 0; i <= 5000000000; i++) {
-        const pursue = yield clone_n_path(5);
-        if (!pursue || counter.minutes >= MAX_RUN_TIME)
+    while (true) {
+        const pursue = yield clone_n_path(200);
+        if (!pursue || (MAX_RUN_TIME && counter.minutes >= MAX_RUN_TIME))
             break;
-        yield new Promise((resolve) => {
-            setTimeout(() => resolve(), 1000);
-        });
     }
     console.log("\x1b[37m\nProcess Completed");
     console.log(`Total axios request : ${axios_request.current} \n`);

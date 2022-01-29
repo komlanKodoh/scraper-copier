@@ -34,22 +34,48 @@ const getStyle = (arr) => {
     arr.forEach((style) => (string += logDic[style]));
     return string;
 };
+const color = (log, ...styles) => {
+    return `${getStyle(styles)}${log} ${getStyle(["Reset"])}`;
+};
 const log = (fileExtension, url, data, config) => {
     const main = getStyle(config.main);
     const info = getStyle(config.info);
-    console.log(`${main}- File (${fileExtension}) : ${url}\n   |_ ${info}${data}\n`);
+    console.log(`${color(`${linkedScrapped}/${allLink}`, "FgCyan")}\t${(linkedFailed && color(`Failed : ${linkedFailed}`, "FgRed")) || ""}\n${main}- File (${fileExtension}) : ${url}\n   |_ ${info}${data}\n`);
 };
 const info = (fileExtension, url, web_path, fileName) => {
+    incrementLinkedScrapped();
     log(fileExtension, url, path_1.default.join(web_path, fileName), {
         main: ["FgWhite"],
         info: ["FgGreen"],
     });
 };
 const error = (fileExtension, url, data) => {
+    incrementLinkedFailed();
     log(fileExtension, url, data, {
         main: ["FgWhite"],
         info: ["FgRed"],
     });
 };
-exports.default = { info, log, error };
+let linkedScrapped = 0;
+let allLink = 0;
+let linkedFailed = 0;
+const incrementLinkedScrapped = () => {
+    linkedScrapped++;
+};
+const incrementLinkedFailed = () => {
+    linkedFailed++;
+};
+const incrementTotalLink = (increment) => {
+    allLink += increment;
+    console.log(color(`Retrieved : `, "Reset"), color(`${increment} links `, "FgYellow"), `; ${allLink - increment} ==>`, color(allLink.toString(), "FgBlue"));
+};
+exports.default = {
+    info,
+    log,
+    error,
+    color,
+    allLink,
+    incrementLinkedScrapped,
+    incrementTotalLink,
+};
 //# sourceMappingURL=Logger.js.map

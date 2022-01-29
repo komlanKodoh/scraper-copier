@@ -2,14 +2,14 @@ import TimeCounter from "./utils/counter";
 
 import db from "./connect";
 import cloneFile from "./lib/cloneFile";
+import path from "path";
 
 var axios_request = { current: 0 };
 
-const clone_n_path = async (n) => {
-  const nexts = await db.find_next(5);
+const clone_n_path = async (n: number) => {
+  const nexts = await db.find_next(n);
 
   if (nexts.length === 0) {
-
     return false;
   }
 
@@ -22,18 +22,15 @@ const clone_n_path = async (n) => {
   return true;
 };
 
-const start = async (target_url: string[]) => {
-  await  db.init(...target_url)
+const start = async (target_url: string[], MAX_RUN_TIME?: number) => {
+  await db.init(target_url, path.join(__dirname, ".default_scraper.db"));
 
-  const MAX_RUN_TIME = 10;
   const counter = new TimeCounter();
 
-  for (let i = 0; i <= 5000000000; i++) {
-    const pursue = await clone_n_path(5);
-    if (!pursue || counter.minutes >= MAX_RUN_TIME) break;
-    await new Promise<void>((resolve) => {
-      setTimeout(() => resolve(), 1000);
-    });
+  while (true) {
+    const pursue = await clone_n_path(200);
+
+    if (!pursue || (MAX_RUN_TIME && counter.minutes >= MAX_RUN_TIME)) break;
   }
 
   console.log("\x1b[37m\nProcess Completed");

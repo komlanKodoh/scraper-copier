@@ -79,7 +79,7 @@ export default class implements DbManager {
     }) as Promise<link[]>;
   };
 
-  public init = async (...links:string[]) => {
+  public init = async (links:string[]) => {
     await new Promise<void>((resolve) => {
       this.db.connect((err) => {
         if (err) {

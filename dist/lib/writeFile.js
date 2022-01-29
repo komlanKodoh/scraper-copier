@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = __importDefault(require("path"));
+const Logger_1 = __importDefault(require("../classes/Logger"));
 const fs = require("fs");
 exports.default = (data, web_path, fileName) => __awaiter(void 0, void 0, void 0, function* () {
     if (typeof data === "object") {
@@ -22,7 +23,7 @@ exports.default = (data, web_path, fileName) => __awaiter(void 0, void 0, void 0
     yield fs.writeFile(destination, data, (err) => {
         if (err) {
             // console.error(err);
-            console.log("  - File : Not Found : ", destination);
+            console.log(Logger_1.default.color("  - File : Not Found : " + destination, "FgRed"));
             return;
         }
     });

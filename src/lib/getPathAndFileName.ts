@@ -1,51 +1,59 @@
+import { firstEncounter } from "../utils";
 
 const path = require("path");
 
+/**
+ *
+ * @param fileName
+ * @param if_none what to return if extension
+ * @returns
+ */
 export const getFileExtension = (fileName: string, if_none?: string) => {
-  const temp_arr = fileName.split(".");
+  const temp_arr = fileName.split(/([^\/]\.|\?)/g);
 
-  if (temp_arr.length >= 2) return temp_arr.pop();
+  if (temp_arr.length >= 2) return temp_arr[2];
   else return if_none ?? null;
 };
 
-const getPathAndFileName = (url: string) => {
+/**
+ * Extract directory, fileName, and fileExtension from valid url Object
+ *
+ * @param url url object
+ * @returns Array of the shape [directory, fileName, fileExtension]
+ */
+const getPathAndFileName: (
+  url: URL,
+  root?: string
+) => [directory: string, fileName: string, fileExtension: string] = (
+  url: URL,
+  root?: string
+) => {
+  let fullPath = path.join(url.hostname, url.pathname);
 
-  let web_path, filename, file_extension;
+  // at index.html at the end of every path ending with a trailing "/"
+  if (fullPath[fullPath.length - 1] === "/") fullPath += "index.html";
 
-  const link = url.match(/^(https*:\/\/)([^#]*)/)[2];
+  const urlFileName = path.basename(fullPath);
 
+  // get index for the where the first dot from the left is met
+  let extensionIndex = firstEncounter(urlFileName, ".", "r") || urlFileName.length;
 
-  let i;
-  let len = link.length;
-  for (i = len-1; i >= 0; i--) {
-    if (link[i] === "/") break;
+  let fileName_noFileExtension = urlFileName.slice(0, extensionIndex);
+  let fileExtension = urlFileName.slice(extensionIndex  + 1);
+
+  let directory = path.dirname(fullPath);
+
+  if (!fileExtension) {
+    directory = path.join(directory, fileName_noFileExtension);
+
+    fileName_noFileExtension = "index";
+    fileExtension = "html";
   }
 
-  if (i === len-1){
-    web_path = link.slice(0,len-1)
-    filename = "index.html";
-  }
-  else if (i === -1 ) {
-    web_path = link;
-    filename = "index.html";
-  } else {
-    web_path = link.slice(0, i);
-    filename = link.slice(i + 1);
-  }
-  file_extension = getFileExtension(filename);
-
-  if (!file_extension) {
-    filename += ".html";
-    file_extension = "html";
-  }
-
-  // console.log(process.cwd(), global._target_directory ?? "", web_path ?? "", 90909)
-  const directory = path.join(process.cwd(), global._target_directory ?? "", web_path)
-  // console.log(directory, filename,898989898)
-  return [directory, filename, file_extension] as [
-    string,
-    string,
-    string
+  return [
+    path.join(root || "", directory),
+    fileName_noFileExtension + url.search + "." + fileExtension,
+    fileExtension,
   ];
 };
 

@@ -18,7 +18,7 @@ for (const db of [new SqLite, new MySql]){
   
   
     it("Should initialized successfully", async () => {
-      await db.init("https://komlankodoh.com", "https://dummylink.com");
+      await db.init(["https://komlankodoh.com", "https://dummylink.com"]);
       await new Promise<void>((resolve) => {
         db.db.all(sql`select * from link`, (error, rows) => {
           expect(rows[0]).toEqual({

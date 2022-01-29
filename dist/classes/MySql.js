@@ -53,7 +53,7 @@ class default_1 {
                 });
             });
         });
-        this.init = (...links) => __awaiter(this, void 0, void 0, function* () {
+        this.init = (links) => __awaiter(this, void 0, void 0, function* () {
             yield new Promise((resolve) => {
                 this.db.connect((err) => {
                     if (err) {

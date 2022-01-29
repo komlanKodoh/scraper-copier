@@ -1,5 +1,7 @@
 import path from "path";
 import { getFileExtension } from "./../lib/getPathAndFileName";
+
+type styles = keyof typeof logDic;
 const logDic = {
   Reset: "\x1b[0m",
   Bright: "\x1b[1m",
@@ -26,40 +28,80 @@ const logDic = {
   BgMagenta: "\x1b[45m",
   BgCyan: "\x1b[46m",
   BgWhite: "\x1b[47m",
-};
+} as const;
 
-const getStyle = (arr) => {
+const getStyle = (arr: styles[]) => {
   let string = "";
 
   arr.forEach((style) => (string += logDic[style]));
   return string;
 };
 
+const color = (log: string, ...styles: styles[]) => {
+  return `${getStyle(styles)}${log} ${getStyle(["Reset"])}`;
+};
+
 const log = (
   fileExtension: string,
   url: string,
-  data: string, 
-  config: { main: string[]; info: string[] }
+  data: string,
+  config: { main: styles[]; info: styles[] }
 ) => {
   const main = getStyle(config.main);
   const info = getStyle(config.info);
 
   console.log(
-    `${main}- File (${fileExtension}) : ${url}\n   |_ ${info}${data}\n`
+    `${color(`${linkedScrapped}/${allLink}`, "FgCyan")}\t${
+      (linkedFailed && color(`Failed : ${linkedFailed}`, "FgRed")) || ""
+    }\n${main}- File (${fileExtension}) : ${url}\n   |_ ${info}${data}\n`
   );
 };
 
 const info = (fileExtension: string, url: string, web_path, fileName) => {
-  log(fileExtension, url,path.join( web_path, fileName), {
+  incrementLinkedScrapped();
+  log(fileExtension, url, path.join(web_path, fileName), {
     main: ["FgWhite"],
     info: ["FgGreen"],
   });
 };
 
-const error = (fileExtension: string, url: string,data) => {
-    log(fileExtension, url,data, {
-      main: ["FgWhite"],
-      info: ["FgRed"],
-    });
-  };
-export default { info, log, error };
+const error = (fileExtension: string, url: string, data) => {
+  incrementLinkedFailed();
+  log(fileExtension, url, data, {
+    main: ["FgWhite"],
+    info: ["FgRed"],
+  });
+};
+
+let linkedScrapped = 0;
+let allLink = 0;
+let linkedFailed = 0;
+
+const incrementLinkedScrapped = () => {
+  linkedScrapped++;
+};
+
+const incrementLinkedFailed = () => {
+  linkedFailed++;
+};
+
+const incrementTotalLink = (increment: number) => {
+  allLink += increment;
+
+  console.log(
+    color(`Retrieved : `, "Reset"),
+    color(`${increment} links `, "FgYellow"),
+    `; ${allLink - increment} ==>`,
+    color(allLink.toString(), "FgBlue")
+  );
+};
+
+export default {
+  info,
+  log,
+  error,
+  color,
+  allLink,
+  incrementLinkedScrapped,
+  incrementTotalLink,
+};

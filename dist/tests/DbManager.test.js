@@ -28,7 +28,7 @@ for (const db of [new SqLite_1.default, new MySql_1.default]) {
     describe(`Testing implementation of databases : ${db.name}`, () => {
         const db = new MySql_1.default();
         it("Should initialized successfully", () => __awaiter(void 0, void 0, void 0, function* () {
-            yield db.init("https://komlankodoh.com", "https://dummylink.com");
+            yield db.init(["https://komlankodoh.com", "https://dummylink.com"]);
             yield new Promise((resolve) => {
                 db.db.all((0, sql_1.sql) `select * from link`, (error, rows) => {
                     expect(rows[0]).toEqual({

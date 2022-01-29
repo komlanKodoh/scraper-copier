@@ -1,10 +1,11 @@
+import { link } from './../types/global';
 const sqlite3 = require("sqlite3").verbose();
-import { link } from "../types/global";
 import { createInsertValues } from "../utils";
+import { ensurePath } from "../utils/ensurePath";
 import { sql } from "../utils/sql";
 import DbManager from "./DbManagerInterface";
+import Logger from "./Logger";
 const path = require("path");
-
 
 /**
  * @class SqLite DataAccessObject ;
@@ -20,12 +21,18 @@ export default class SqLite implements DbManager {
 
   /**
    * A list of links that will be added to the database;
-   * 
+   *
    * @param links links to add to database
    * @returns a promise;
    */
-  public add = (links: string[]) => {
-    return new Promise((resolve, reject) => {
+  async add(links: string[]) {
+    const maxChunkLength = 500;
+
+    const linkChunk = links.slice(0, maxChunkLength);
+
+    if (links.length > linkChunk.length) this.add(links.slice(maxChunkLength))
+
+    return new Promise<void>((resolve, reject) => {
       if (links.length === 0) return resolve();
 
       this.db.run(
@@ -41,12 +48,14 @@ export default class SqLite implements DbManager {
           resolve();
         }
       );
-    }) as Promise<void>;
-  };
+    });
+
+    return;
+  }
 
   /**
    * Delete link from mysql database
-   * 
+   *
    * @param link A link that will be deleted from the mysql database
    * @returns A promise
    */
@@ -65,11 +74,20 @@ export default class SqLite implements DbManager {
 
   /**
    * Find next n = limit link that can be scrapped
-   * 
+   *
    * @param limit maximum number of link to get;
    * @returns a promise with link object
    */
   public find_next = (limit?: number) => {
+    let query = `
+    SELECT  *
+    FROM link 
+    WHERE seen = 0
+    ORDER BY popularity DESC
+    `;
+
+    if (limit) query += `LIMIT ${limit}`;
+
     return new Promise((resolve, reject) => {
       this.db.all(
         `
@@ -77,11 +95,15 @@ export default class SqLite implements DbManager {
               FROM link 
               WHERE seen = 0
               ORDER BY popularity DESC
-              LIMIT ${limit || 5000}
+              LIMIT ${limit}
           `,
         (err, rows: link[]) => {
           if (!rows) {
             return resolve([]);
+          }
+
+          if (rows.length > 0) {
+            Logger.incrementTotalLink(rows.length);
           }
           resolve(rows);
         }
@@ -91,35 +113,42 @@ export default class SqLite implements DbManager {
 
   /**
    * Initializes the database by performing basic actions;
-   * 
+   *
    * @param links Initial links of the first pages that will be scrapped at the once the process starts;
    * @returns A promise;
    */
 
-  public init = async (...links: string[]) => {
-    await new Promise<void>((resolve) => {
-      this.db = new sqlite3.Database(
-        path.join(process.cwd(), ".sqlite.db"),
-        (err) => {
-          if (err) {
-            console.error(err);
-          }
-          console.log("Successful connection to sqlite database\n");
-          resolve();
-        }
+  public init = async (links: string[], dbPath) => {
+    if (!(await ensurePath(path.dirname(dbPath))))
+      console.log(
+        Logger.color(`Could not create directory at path ${dbPath}`, "FgRed")
       );
+
+    console.log(links);
+    await new Promise<void>((resolve) => {
+      this.db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+          console.error(err);
+        }
+        console.log("Successful connection to sqlite database\n");
+        resolve();
+      });
     });
 
+    // creation of a table
     await new Promise<void>((resolve, reject) => {
       this.db.run(
         sql`CREATE TABLE IF NOT EXISTS link ( link VARCHAR(200) UNIQUE, popularity INT, seen boolean DEFAULT 0)`,
         () => resolve()
       );
     });
+
+    // emptying the table
     await new Promise<void>((resolve) => {
       this.db.run(sql`DELETE from link`, () => resolve());
     });
 
+    // adding default link to table before booting the process
     await new Promise<void>((resolve, reject) => {
       let values = "";
       const len = links.length;
@@ -137,6 +166,7 @@ export default class SqLite implements DbManager {
                 ON CONFLICT(link) DO UPDATE SET popularity = popularity + 1;
                 `,
         (error) => {
+          console.log(error);
           resolve();
         }
       );
@@ -145,8 +175,8 @@ export default class SqLite implements DbManager {
   };
 
   /**
-   * Change the visibility of link in the database and sets it as seen. 
-   * 
+   * Change the visibility of link in the database and sets it as seen.
+   *
    * @param link {String} to set as seen
    * @returns Promise
    */
@@ -156,7 +186,7 @@ export default class SqLite implements DbManager {
         `
             UPDATE link
             SET seen = 1
-            WHERE link = "${location}";
+            WHERE link = "${link}";
           `,
         (err, rows) => {
           resolve();

@@ -1,14 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.castArray = exports.createInsertValues = exports.getFileExtension = void 0;
-const getFileExtension = (fileName, if_none) => {
-    const temp_arr = fileName.split(".");
-    if (temp_arr.length >= 2)
-        return temp_arr.pop();
-    else
-        return if_none !== null && if_none !== void 0 ? if_none : null;
-};
-exports.getFileExtension = getFileExtension;
+exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
 const createInsertValues = (links) => {
     let values = "";
     const len = links.length;
@@ -23,4 +15,29 @@ const castArray = (arg) => {
     return Array.isArray(arg) ? arg : [arg];
 };
 exports.castArray = castArray;
+const setGlobal = (variableName, value) => {
+    if (!global[variableName]) {
+        global[variableName] = value;
+    }
+    else {
+        throw new Error("Trying to set to existing global variable : " + variableName);
+    }
+};
+exports.setGlobal = setGlobal;
+const firstEncounter = (string, target, origin) => {
+    if (origin === "l") {
+        for (let i = 0; i < string.length; i++) {
+            if (string[i] === target)
+                return i;
+        }
+    }
+    else if (origin === "r") {
+        for (let i = string.length - 1; i >= 0; i--) {
+            if (string[i] === target)
+                return i;
+        }
+    }
+    return null;
+};
+exports.firstEncounter = firstEncounter;
 //# sourceMappingURL=index.js.map
