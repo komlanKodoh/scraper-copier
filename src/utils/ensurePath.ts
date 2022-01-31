@@ -1,13 +1,18 @@
 const fs = require("fs");
 
-
-export const ensurePath: (web_path:string) => Promise<boolean> = (web_path: string)  => {
-
+export const ensurePath: (
+  localPath: string,
+  cb?: (directoryExists: boolean) => any
+) => Promise<boolean> = (localPath, cb) => {
   return new Promise((resolve, reject) => {
     try {
-      if (!fs.existsSync(web_path)) fs.mkdirSync(web_path, { recursive: true });
+      if (!fs.existsSync(localPath))
+        fs.mkdirSync(localPath, { recursive: true });
+
+      if (cb) cb(true);
       resolve(true);
     } catch (err) {
+      if (cb) cb(false);
       return resolve(false);
     }
   });

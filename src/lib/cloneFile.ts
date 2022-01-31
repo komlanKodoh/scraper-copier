@@ -1,43 +1,50 @@
-import getPathAndFileName from "./getPathAndFileName";
+import path from "path";
+import writeFile from "./writeFile";
 import downloadImg from "./downloadImg";
 import processLink from "./processLink";
-import writeFile from "./writeFile";
-import db from "../connect";
-import path from "path";
-import Logger from "../classes/Logger";
 import { ensurePath } from "../utils/ensurePath";
+import ProcessManager from "../classes/ProcessManager";
+import getPathAndFileName from "./getPathAndFileName";
 
-const fs = require("fs");
-const axios = require("axios");
 const cheerio = require("cheerio");
 
-export default async (url: string, axios_request: { current: number }) => {
+const cloneFile = async (url: string, processManager: ProcessManager) => {
+  const urlObject = new URL(url);
+  const scraperManager = processManager.scraperManager;
   try {
-    db.see(url);
-    const parsedUrl = new URL(url);
+    // change link visibility to prevent it from being scrapped;
+    scraperManager.see(url);
+
     const authorizedDomains = global._authorized_domain;
 
-    const [web_path, fileName, fileExtension] = getPathAndFileName(
-      parsedUrl,
+    const [localDirectory, fileName, fileExtension] = getPathAndFileName(
+      urlObject,
       path.join(process.cwd(), global._target_directory || "")
     );
 
-    if (!(await ensurePath(web_path)))
-      Logger.error(fileExtension, url, `could not create file ${web_path}`);
+    const file: FileObject = {
+      name: fileName,
+      extension: fileExtension,
+    };
 
-    axios_request.current++;
-    const response = await axios.get(url).catch((err) => {
-      console.log(err)
-      Logger.error(fileExtension, url, `Not Found`);
-    });
+    if (!(await ensurePath(localDirectory))) {
+      processManager.logSuccessfulWrite(
+        urlObject,
+        file,
+        `could not create file ${localDirectory}`
+      );
+    }
+
+    const response = await processManager.getRemoteFile(urlObject, file);
 
     if (!response) return;
 
     let link_to_save: string[] = [];
 
     if (["png", "jpg", "jpeg", "gif", "svg"].includes(fileExtension)) {
-      await downloadImg(url, path.join(web_path, fileName), () => {
-        Logger.info(fileExtension, url, web_path, fileName);
+      await downloadImg(url, path.join(localDirectory, fileName), file,(error) => {
+        if (error ) processManager.logFailedWrite(urlObject, file, error.message)
+        else  processManager.logSuccessfulWrite(urlObject, file, localDirectory);
       });
       return;
     } else if (["html", "htm"].includes(fileExtension)) {
@@ -48,50 +55,53 @@ export default async (url: string, axios_request: { current: number }) => {
       const meta_links: string = $("link");
       const image_links: string = $("img");
 
-      $(meta_links).each((_, meta_link) => {
+      $(meta_links).each((_: any, meta_link: string) => {
         const _meta_link = $(meta_link).attr("href");
-        processLink(_meta_link, parsedUrl, link_to_save, authorizedDomains);
+        processLink(_meta_link, urlObject, link_to_save, authorizedDomains);
       });
 
-      $(script).each((_, script) => {
+      $(script).each((_: any, script: string) => {
         const _script = $(script).attr("src");
-        processLink(_script, parsedUrl, link_to_save, authorizedDomains);
+        processLink(_script, urlObject, link_to_save, authorizedDomains);
       });
 
-      $(links).each(function (_, link) {
+      $(links).each(function (_: any, link: string) {
         const _link = $(link).attr("href");
-        processLink(_link, parsedUrl, link_to_save, authorizedDomains);
+        processLink(_link, urlObject, link_to_save, authorizedDomains);
       });
 
-      $(image_links).each(function (_, image_link) {
+      $(image_links).each(function (_: any, image_link: string) {
         const _image_link = $(image_link).attr("src");
-        processLink(_image_link, parsedUrl, link_to_save, authorizedDomains);
+        processLink(_image_link, urlObject, link_to_save, authorizedDomains);
       });
     } else if (fileExtension === "css") {
       const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
 
       let match = myRegexp.exec(response.data);
       while (match != null) {
-        console.log
-        processLink(match[2], parsedUrl, link_to_save);
+        console.log;
+        processLink(match[2], urlObject, link_to_save);
         match = myRegexp.exec(response.data);
       }
     }
 
-    await db.add(link_to_save);
+    await processManager.scraperManager.add(link_to_save);
 
-    await writeFile(response.data, web_path, fileName);
-    Logger.info(fileExtension, url, web_path, fileName);
-  } catch (error) {
+    await writeFile(response.data, localDirectory, file, (error) => {
+      if (error) processManager.logFailedWrite(urlObject, file, error.message);
+      else processManager.logSuccessfulWrite(urlObject, file, localDirectory);
+    });
+
+    
+  } catch (error: any) {
     switch (error.code) {
       case "ERR_INVALID_URL":
-        console.log(
-          Logger.error(
-            "unknown",
-            url,
-            "Could not load the file, Url is invalid"
-          )
+        processManager.logFailedWrite(
+          urlObject,
+          { extension: "unknown", name: "unknown" },
+          "Could not load the file, Url is invalid"
         );
+
         break;
 
       default:
@@ -99,3 +109,5 @@ export default async (url: string, axios_request: { current: number }) => {
     }
   }
 };
+
+export default cloneFile;

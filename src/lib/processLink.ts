@@ -1,12 +1,22 @@
 import path from "path";
 
 const postProcess = (processedLink: string) => {
+  // removes trailing "/" and location hash from a url string
   return processedLink.replace(/(\/*#.*|\/$)/g, "");
 };
 
+/**
+ * Processes links found in remote html page and adds to array add_to passed as third argument
+ *
+ * @param link link to process
+ * @param remoteUrl url source where the link was found
+ * @param add_to array of string where the link must be added
+ * @param authorize regular expression list of domains that can be accepted; Note: Relative path are accepted by default
+ * @returns a string with processed url
+ */
 const processLink = (
   link: string,
-  url: URL,
+  remoteUrl: URL,
   add_to: string[],
   authorize: RegExp[] = []
 ) => {
@@ -19,29 +29,35 @@ const processLink = (
   )
     return;
 
-  let processedURL = url;
+  let processedRemoteURL = remoteUrl;
+
   if (link.slice(0, 2) === "//") link = "https:" + link;
 
   if (link.slice(0, 5) === "http:" || link.slice(0, 6) === "https:") {
     const linkUrl = new URL(link);
 
     if (authorize.some((domainRegex) => domainRegex.test(linkUrl.hostname))) {
-      link = path.join(linkUrl.pathname, linkUrl.search);
-      processedURL = linkUrl;
+      // link = linkUrl.pathname + linkUrl.search;
+      // processedRemoteURL = linkUrl;
+
+      add_to.push(postProcess(link));
+      return;
     } else return;
   }
 
-  const href =
-    processedURL.hostname + processedURL.pathname.replace(/\.[a-zA-Z]+$/g, "");
-  if (link.length >= 185) return;
+  let href =
+    processedRemoteURL.host +
+    processedRemoteURL.pathname.replace(/\.[a-zA-Z]+$/g, "");
 
   if (link[0] == "/") {
-    const _link = processedURL.origin + link;
+    const _link = processedRemoteURL.origin + link;
     add_to.push(postProcess(_link));
-  }
+  } else {
 
-  else {
-    const _link = processedURL.protocol + "//" + path.join(href ,"../",link);
+    if (processedRemoteURL.pathname === "/") href+= "index.html";
+
+    const _link =
+      processedRemoteURL.protocol + "//" + path.join(href, "../", link);
     add_to.push(postProcess(_link));
   }
 

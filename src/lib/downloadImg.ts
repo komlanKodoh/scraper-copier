@@ -1,19 +1,34 @@
-const fs = require("fs");
+
+import fs from "fs";
 const request = require("request");
 
-export default function (
+/**
+ * Downloads image from remote url to local path
+ * 
+ * NOTE: Nested directory must be created in advance; That could be achieved using the ensurePath utilityFunction. 
+ * 
+ * @param uri remote url location of image
+ * @param localDirectory path  where to write the image
+ * @param callback 
+ * @returns 
+ */
+
+const downloadImg =  function (
   uri: string,
-  filename: string,
-  callback: (arg: any) => void
+  localDirectory: string,
+  file: FileObject,
+  callback: (error: CustomError | null ) => void
 ) {
-  return new Promise((resolve, refect) =>
-    request.head(uri, async function (err, res, body) {
+  return new Promise<void>((resolve) =>
+    request.head(uri, async function () {
       request(uri)
-        .pipe(fs.createWriteStream(filename))
-        .on("close", (arg) => {
-          callback(arg);
-          resolve("cool");
+        .pipe(fs.createWriteStream(localDirectory))
+        .on("close", () => {
+          callback(null);
+          resolve();
         });
     })
   );
 }
+
+export default downloadImg;

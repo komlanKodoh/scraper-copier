@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
+exports.insertIn = exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
 const createInsertValues = (links) => {
     let values = "";
     const len = links.length;
@@ -16,7 +16,9 @@ const castArray = (arg) => {
 };
 exports.castArray = castArray;
 const setGlobal = (variableName, value) => {
+    // @ts-ignore
     if (!global[variableName]) {
+        // @ts-ignore
         global[variableName] = value;
     }
     else {
@@ -40,4 +42,6 @@ const firstEncounter = (string, target, origin) => {
     return null;
 };
 exports.firstEncounter = firstEncounter;
+const insertIn = (receiver, index, stringToInsert) => receiver.slice(0, index) + stringToInsert + receiver.slice(index);
+exports.insertIn = insertIn;
 //# sourceMappingURL=index.js.map

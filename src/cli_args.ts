@@ -1,16 +1,15 @@
 import { array } from "yargs";
 
-const yargs = require("yargs");
-
+import yargs from "yargs";
 const cli_args = yargs
   .command(
     "load <url> [dest]",
     "load domain starting from url to given destination",
-    (yargs) => {
+    (yargs: yargs.Argv) => {
       yargs
         .positional("url", {
           describe: "root element to start the process from",
-          type: "array",
+          type: "string",
         })
         .positional("dest", {
           describe: "destination folder",
@@ -25,10 +24,11 @@ const cli_args = yargs
           type: "string",
           description: "supplemental root element to start the process from",
         })
-        .option("authorized-domain", {
+        .option("authorize-domain", {
           alias: "d",
-          type: array,
-          description: "a list of authorized domain that the scrapper can extends to",
+          type: "array",
+          description:
+            "a list of authorized domain that the scrapper can extends to",
         });
     }
   )
@@ -59,6 +59,6 @@ const cli_args = yargs
   .help()
   .alias("help", "h").argv;
 
-type cli_args = {};
+type cli_args = typeof cli_args & {"authorized-domain": string[], "public": string, "port": string};
 
-export default cli_args;
+export default cli_args as cli_args;

@@ -8,20 +8,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = require("fs");
+const fs_1 = __importDefault(require("fs"));
 const request = require("request");
-function default_1(uri, filename, callback) {
-    return new Promise((resolve, refect) => request.head(uri, function (err, res, body) {
+/**
+ * Downloads image from remote url to local path
+ *
+ * NOTE: Nested directory must be created in advance; That could be achieved using the ensurePath utilityFunction.
+ *
+ * @param uri remote url location of image
+ * @param localDirectory path  where to write the image
+ * @param callback
+ * @returns
+ */
+const downloadImg = function (uri, localDirectory, file, callback) {
+    return new Promise((resolve) => request.head(uri, function () {
         return __awaiter(this, void 0, void 0, function* () {
             request(uri)
-                .pipe(fs.createWriteStream(filename))
-                .on("close", (arg) => {
-                callback(arg);
-                resolve("cool");
+                .pipe(fs_1.default.createWriteStream(localDirectory))
+                .on("close", () => {
+                callback(null);
+                resolve();
             });
         });
     }));
-}
-exports.default = default_1;
+};
+exports.default = downloadImg;
 //# sourceMappingURL=downloadImg.js.map

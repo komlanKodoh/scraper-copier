@@ -4,7 +4,7 @@ const path = require("path");
 
 /**
  *
- * @param fileName
+ * @param fileName name of
  * @param if_none what to return if extension
  * @returns
  */
@@ -16,7 +16,11 @@ export const getFileExtension = (fileName: string, if_none?: string) => {
 };
 
 /**
- * Extract directory, fileName, and fileExtension from valid url Object
+ * Extract directory, fileName, and fileExtension from valid url Object;
+ *
+ * NOTE: This functions moves the url query to before the file extension so that it can correctly 
+ * be parse by operating system and web server;
+ * File parsed with this method must be served using this method or a method with same signature.
  *
  * @param url url object
  * @returns Array of the shape [directory, fileName, fileExtension]
@@ -36,10 +40,11 @@ const getPathAndFileName: (
   const urlFileName = path.basename(fullPath);
 
   // get index for the where the first dot from the left is met
-  let extensionIndex = firstEncounter(urlFileName, ".", "r") || urlFileName.length;
+  let extensionIndex =
+    firstEncounter(urlFileName, ".", "r") || urlFileName.length;
 
   let fileName_noFileExtension = urlFileName.slice(0, extensionIndex);
-  let fileExtension = urlFileName.slice(extensionIndex  + 1);
+  let fileExtension = urlFileName.slice(extensionIndex + 1);
 
   let directory = path.dirname(fullPath);
 

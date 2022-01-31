@@ -1,8 +1,12 @@
+
 import path from "path";
 import { getFileExtension } from "./../lib/getPathAndFileName";
+import { processManagerMetadata } from "./ProcessManager";
 
-type styles = keyof typeof logDic;
-const logDic = {
+//TODO: Turn this "class file " into a proper class using adequate class syntax;
+
+type styles = keyof typeof consoleColorDic;
+const consoleColorDic = {
   Reset: "\x1b[0m",
   Bright: "\x1b[1m",
   Dim: "\x1b[2m",
@@ -30,78 +34,59 @@ const logDic = {
   BgWhite: "\x1b[47m",
 } as const;
 
+/**
+ * Process array with corresponding styles and returns
+ * string with all styles.
+ *
+ * @param arr array of string with different color styles
+ * @returns returns string with all corresponding styles
+ */
 const getStyle = (arr: styles[]) => {
   let string = "";
 
-  arr.forEach((style) => (string += logDic[style]));
+  arr.forEach((style) => (string += consoleColorDic[style]));
   return string;
 };
 
-const color = (log: string, ...styles: styles[]) => {
+/**
+ * Decorates string with given styles
+ *
+ * @param log string to log to the console
+ * @param styles list of styles to decorate the logs
+ * @returns decorated strings
+ */
+const color = (log: string | number, ...styles: styles[]) => {
   return `${getStyle(styles)}${log} ${getStyle(["Reset"])}`;
 };
 
-const log = (
+/**
+ * Formatted log of file related process
+ *
+ * @param fileExtension file extension
+ * @param url remote url to the file
+ * @param data data to be logged to the console
+ * @param config config object with main : array styles for first line and info: array styles for second line/info;
+ */
+const logFileProcess = (
   fileExtension: string,
   url: string,
   data: string,
+  metadata: processManagerMetadata,
   config: { main: styles[]; info: styles[] }
 ) => {
-  const main = getStyle(config.main);
-  const info = getStyle(config.info);
+  const mainStyles = getStyle(config.main);
+  const infoStyles = getStyle(config.info);
 
+  // (metadata.failedWrite && color(`Failed : ${metadata.}`, "FgRed")) || ""
   console.log(
-    `${color(`${linkedScrapped}/${allLink}`, "FgCyan")}\t${
-      (linkedFailed && color(`Failed : ${linkedFailed}`, "FgRed")) || ""
-    }\n${main}- File (${fileExtension}) : ${url}\n   |_ ${info}${data}\n`
-  );
-};
-
-const info = (fileExtension: string, url: string, web_path, fileName) => {
-  incrementLinkedScrapped();
-  log(fileExtension, url, path.join(web_path, fileName), {
-    main: ["FgWhite"],
-    info: ["FgGreen"],
-  });
-};
-
-const error = (fileExtension: string, url: string, data) => {
-  incrementLinkedFailed();
-  log(fileExtension, url, data, {
-    main: ["FgWhite"],
-    info: ["FgRed"],
-  });
-};
-
-let linkedScrapped = 0;
-let allLink = 0;
-let linkedFailed = 0;
-
-const incrementLinkedScrapped = () => {
-  linkedScrapped++;
-};
-
-const incrementLinkedFailed = () => {
-  linkedFailed++;
-};
-
-const incrementTotalLink = (increment: number) => {
-  allLink += increment;
-
-  console.log(
-    color(`Retrieved : `, "Reset"),
-    color(`${increment} links `, "FgYellow"),
-    `; ${allLink - increment} ==>`,
-    color(allLink.toString(), "FgBlue")
+    `${color(
+      `${metadata.successfulWrite}/${metadata.allLink}`,
+      "FgCyan"
+    )}\t\n${mainStyles}- File (${fileExtension}) : ${url}\n   |_ ${infoStyles}${data}\n`
   );
 };
 
 export default {
-  info,
-  log,
-  error,
   color,
-  allLink,
-  incrementLinkedScrapped,
-  incrementTotalLink,
+  logFileProcess,
 };

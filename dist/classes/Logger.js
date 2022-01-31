@@ -1,10 +1,6 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const path_1 = __importDefault(require("path"));
-const logDic = {
+const consoleColorDic = {
     Reset: "\x1b[0m",
     Bright: "\x1b[1m",
     Dim: "\x1b[2m",
@@ -29,53 +25,44 @@ const logDic = {
     BgCyan: "\x1b[46m",
     BgWhite: "\x1b[47m",
 };
+/**
+ * Process array with corresponding styles and returns
+ * string with all styles.
+ *
+ * @param arr array of string with different color styles
+ * @returns returns string with all corresponding styles
+ */
 const getStyle = (arr) => {
     let string = "";
-    arr.forEach((style) => (string += logDic[style]));
+    arr.forEach((style) => (string += consoleColorDic[style]));
     return string;
 };
+/**
+ * Decorates string with given styles
+ *
+ * @param log string to log to the console
+ * @param styles list of styles to decorate the logs
+ * @returns decorated strings
+ */
 const color = (log, ...styles) => {
     return `${getStyle(styles)}${log} ${getStyle(["Reset"])}`;
 };
-const log = (fileExtension, url, data, config) => {
-    const main = getStyle(config.main);
-    const info = getStyle(config.info);
-    console.log(`${color(`${linkedScrapped}/${allLink}`, "FgCyan")}\t${(linkedFailed && color(`Failed : ${linkedFailed}`, "FgRed")) || ""}\n${main}- File (${fileExtension}) : ${url}\n   |_ ${info}${data}\n`);
-};
-const info = (fileExtension, url, web_path, fileName) => {
-    incrementLinkedScrapped();
-    log(fileExtension, url, path_1.default.join(web_path, fileName), {
-        main: ["FgWhite"],
-        info: ["FgGreen"],
-    });
-};
-const error = (fileExtension, url, data) => {
-    incrementLinkedFailed();
-    log(fileExtension, url, data, {
-        main: ["FgWhite"],
-        info: ["FgRed"],
-    });
-};
-let linkedScrapped = 0;
-let allLink = 0;
-let linkedFailed = 0;
-const incrementLinkedScrapped = () => {
-    linkedScrapped++;
-};
-const incrementLinkedFailed = () => {
-    linkedFailed++;
-};
-const incrementTotalLink = (increment) => {
-    allLink += increment;
-    console.log(color(`Retrieved : `, "Reset"), color(`${increment} links `, "FgYellow"), `; ${allLink - increment} ==>`, color(allLink.toString(), "FgBlue"));
+/**
+ * Formatted log of file related process
+ *
+ * @param fileExtension file extension
+ * @param url remote url to the file
+ * @param data data to be logged to the console
+ * @param config config object with main : array styles for first line and info: array styles for second line/info;
+ */
+const logFileProcess = (fileExtension, url, data, metadata, config) => {
+    const mainStyles = getStyle(config.main);
+    const infoStyles = getStyle(config.info);
+    // (metadata.failedWrite && color(`Failed : ${metadata.}`, "FgRed")) || ""
+    console.log(`${color(`${metadata.successfulWrite}/${metadata.allLink}`, "FgCyan")}\t\n${mainStyles}- File (${fileExtension}) : ${url}\n   |_ ${infoStyles}${data}\n`);
 };
 exports.default = {
-    info,
-    log,
-    error,
     color,
-    allLink,
-    incrementLinkedScrapped,
-    incrementTotalLink,
+    logFileProcess,
 };
 //# sourceMappingURL=Logger.js.map

@@ -1,4 +1,3 @@
-import { link } from "../types/global";
 
 export default interface DbManager {
   db: {};

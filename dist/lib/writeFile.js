@@ -13,19 +13,58 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = __importDefault(require("path"));
-const Logger_1 = __importDefault(require("../classes/Logger"));
 const fs = require("fs");
-exports.default = (data, web_path, fileName) => __awaiter(void 0, void 0, void 0, function* () {
-    if (typeof data === "object") {
-        data = JSON.stringify(data);
+const Logger_1 = __importDefault(require("../classes/Logger"));
+const utils_1 = require("../utils");
+/**
+ * Processes html before write to local path
+ *
+ * @param data string content of html document
+ * @returns processed html string
+ */
+function processHTML(HTML) {
+    const scriptToInject = `<script src='/helpers/html'></script>`;
+    const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
+    if (!(matched === null || matched === void 0 ? void 0 : matched.index)) {
+        throw new Error("Head is not found.");
     }
-    const destination = path_1.default.join(web_path, fileName);
+    const insertIndex = matched.index + matched[0].length;
+    return (0, utils_1.insertIn)(HTML, insertIndex, scriptToInject);
+}
+/**
+ * Write data string or json object to given directory under given fileName
+ *
+ * @param data data string to write in file
+ * @param localDirectory directory where to write the file
+ * @param fileName name of the file to write
+ */
+const writeFile = (data, localDirectory, file, callback) => __awaiter(void 0, void 0, void 0, function* () {
+    const destination = path_1.default.join(localDirectory, file.name);
+    if (typeof data === "object") {
+        try {
+            data = JSON.stringify(data);
+        }
+        catch (err) {
+            callback({ message: "could not convert object file to json" });
+            return;
+        }
+    }
+    else if (file.extension === "html") {
+        try {
+            data = processHTML(data);
+        }
+        catch (err) {
+            console.log(Logger_1.default.color("- File : Could not inject js " + destination + "\n", "FgRed"));
+        }
+    }
     yield fs.writeFile(destination, data, (err) => {
         if (err) {
-            // console.error(err);
-            console.log(Logger_1.default.color("  - File : Not Found : " + destination, "FgRed"));
-            return;
+            callback({ message: `Unable to write file on path ${destination}` });
+        }
+        else {
+            callback(null);
         }
     });
 });
+exports.default = writeFile;
 //# sourceMappingURL=writeFile.js.map

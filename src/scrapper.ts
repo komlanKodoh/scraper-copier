@@ -1,40 +1,45 @@
-import TimeCounter from "./utils/counter";
-
-import db from "./connect";
 import cloneFile from "./lib/cloneFile";
 import path from "path";
+import Logger from "./classes/Logger";
+import ProcessManager from "./classes/ProcessManager";
+import ScraperManager from "./classes/ScraperManager";
 
 var axios_request = { current: 0 };
 
-const clone_n_path = async (n: number) => {
-  const nexts = await db.find_next(n);
-
-  if (nexts.length === 0) {
-    return false;
-  }
+const cloneRemoteUrls = async (
+  numberOfUrls: number,
+  processManager: ProcessManager
+) => {
+  const nexts = await processManager.findNext(numberOfUrls);
+  if (nexts.length === 0) return false;
 
   const cloning = nexts.map(
-    async ({ link, popularity }) => await cloneFile(link, axios_request)
+    async ({ link, popularity }) => await cloneFile(link, processManager)
   );
 
   await Promise.all(cloning);
-
   return true;
 };
 
-const start = async (target_url: string[], MAX_RUN_TIME?: number) => {
-  await db.init(target_url, path.join(__dirname, ".default_scraper.db"));
 
-  const counter = new TimeCounter();
+const start = async (target_url: string[], MAX_RUN_TIME?: number) => {
+  const dbPath = path.join(__dirname, ".default_scraper.db");
+  const processManager = await new ProcessManager().init({
+    dbPath,
+    scraperRootUrls: target_url,
+  });
+
+  process.on("SIGINT", async () => {
+    await processManager.cleanExit();
+    process.exit();
+  });
 
   while (true) {
-    const pursue = await clone_n_path(200);
-
-    if (!pursue || (MAX_RUN_TIME && counter.minutes >= MAX_RUN_TIME)) break;
+    const pursue = await cloneRemoteUrls(200, processManager);
+    if (!pursue) break;
   }
 
-  console.log("\x1b[37m\nProcess Completed");
-  console.log(`Total axios request : ${axios_request.current} \n`);
+  await processManager.cleanExit()
 };
 
 export default { start };

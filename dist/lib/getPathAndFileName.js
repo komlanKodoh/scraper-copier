@@ -5,7 +5,7 @@ const utils_1 = require("../utils");
 const path = require("path");
 /**
  *
- * @param fileName
+ * @param fileName name of
  * @param if_none what to return if extension
  * @returns
  */
@@ -18,7 +18,11 @@ const getFileExtension = (fileName, if_none) => {
 };
 exports.getFileExtension = getFileExtension;
 /**
- * Extract directory, fileName, and fileExtension from valid url Object
+ * Extract directory, fileName, and fileExtension from valid url Object;
+ *
+ * NOTE: This functions moves the url query to before the file extension so that it can correctly
+ * be parse by operating system and web server;
+ * File parsed with this method must be served using this method or a method with same signature.
  *
  * @param url url object
  * @returns Array of the shape [directory, fileName, fileExtension]

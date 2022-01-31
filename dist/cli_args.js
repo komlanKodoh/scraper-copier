@@ -1,13 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const yargs_1 = require("yargs");
-const yargs = require("yargs");
-const cli_args = yargs
+const yargs_1 = __importDefault(require("yargs"));
+const cli_args = yargs_1.default
     .command("load <url> [dest]", "load domain starting from url to given destination", (yargs) => {
     yargs
         .positional("url", {
         describe: "root element to start the process from",
-        type: "array",
+        type: "string",
     })
         .positional("dest", {
         describe: "destination folder",
@@ -22,9 +24,9 @@ const cli_args = yargs
         type: "string",
         description: "supplemental root element to start the process from",
     })
-        .option("authorized-domain", {
+        .option("authorize-domain", {
         alias: "d",
-        type: yargs_1.array,
+        type: "array",
         description: "a list of authorized domain that the scrapper can extends to",
     });
 })

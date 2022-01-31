@@ -1,4 +1,6 @@
-export const sql = (strings, ...expr) =>
+export const sql = (strings: any, ...expr: any) =>
   strings
-    .map((str, index) => str + (expr.length > index ? String(expr[index]) : ""))
+    .map((str: string, index: number) => str + (expr.length > index ? String(expr[index]) : ""))
     .join("");
+
+    

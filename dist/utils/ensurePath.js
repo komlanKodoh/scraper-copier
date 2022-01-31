@@ -2,14 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ensurePath = void 0;
 const fs = require("fs");
-const ensurePath = (web_path) => {
+const ensurePath = (localPath, cb) => {
     return new Promise((resolve, reject) => {
         try {
-            if (!fs.existsSync(web_path))
-                fs.mkdirSync(web_path, { recursive: true });
+            if (!fs.existsSync(localPath))
+                fs.mkdirSync(localPath, { recursive: true });
+            if (cb)
+                cb(true);
             resolve(true);
         }
         catch (err) {
+            if (cb)
+                cb(false);
             return resolve(false);
         }
     });

@@ -1,4 +1,4 @@
-export const createInsertValues = (links) => {
+export const createInsertValues = (links: string[]) => {
   let values = "";
   const len = links.length;
 
@@ -15,7 +15,9 @@ export const castArray = (arg: string | []): string[] => {
 };
 
 export const setGlobal = (variableName: string, value: any) => {
+  // @ts-ignore
   if (!global[variableName]) {
+    // @ts-ignore
     global[variableName] = value;
   } else {
     throw new Error(
@@ -34,10 +36,16 @@ export const firstEncounter = (
       if (string[i] === target) return i;
     }
   } else if (origin === "r") {
-    for (let i = string.length-1; i >= 0; i--){
-      if(string[i] === target) return i;
+    for (let i = string.length - 1; i >= 0; i--) {
+      if (string[i] === target) return i;
     }
   }
 
   return null;
 };
+
+export const insertIn = (
+  receiver: string,
+  index: number,
+  stringToInsert: string
+) => receiver.slice(0, index) + stringToInsert + receiver.slice(index);
