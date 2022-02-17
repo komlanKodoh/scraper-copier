@@ -1,6 +1,6 @@
 {
-  "name": "scraper-copy",
-  "version": "1.0.01",
+  "name": "scraper-copier",
+  "version": "1.0.11",
   "description": "replicating server file structure on my computer",
   "main": "./dist/index.js",
   "scripts": {

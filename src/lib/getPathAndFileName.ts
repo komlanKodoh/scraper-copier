@@ -57,7 +57,7 @@ const getPathAndFileName: (
 
   return [
     path.join(root || "", directory),
-    fileName_noFileExtension +"?" + Buffer.from(url.search).toString('base64') + "." + fileExtension,
+    fileName_noFileExtension +"query" + Buffer.from(url.search).toString('base64') + "." + fileExtension,
     fileExtension,
   ];
 };
