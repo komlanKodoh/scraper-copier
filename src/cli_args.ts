@@ -33,12 +33,12 @@ const cli_args = yargs
     }
   )
   .command(
-    "serve <public>",
+    "serve <domain>",
     "Serve the cloned website in local machine",
     (yargs) => {
       yargs
-        .positional("public", {
-          description: "public directory to static files create by server load",
+        .positional("domain", {
+          description: "domain Name without protocol (http / https)",
           type: "string",
         })
         .option("port", {
@@ -46,6 +46,11 @@ const cli_args = yargs
           type: "number",
           default: "3000",
           description: "port to which start the server on",
+        }).option("active-caching", {
+          alias: "c",
+          type: "boolean",
+          default: true,
+          description: "Fetches a requested resource if it has not been fetched yet. "
         });
     }
   )
@@ -59,6 +64,6 @@ const cli_args = yargs
   .help()
   .alias("help", "h").argv;
 
-type cli_args = typeof cli_args & {"authorized-domain": string[], "public": string, "port": string};
+type cli_args = typeof cli_args & {"authorized-domain": string[], "active-caching" : boolean ,"domain": string, "port": string, "dest": string};
 
 export default cli_args as cli_args;

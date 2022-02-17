@@ -38,12 +38,16 @@ switch (cli_args._[0]) {
         .map((domain) => new RegExp(domain, "i")) as RegExp[]
     );
 
-    scrapper.start(startingUrls);
+    scrapper.start(startingUrls, path.join(process.cwd(), cli_args.dest || ""));
     break;
 
   case "serve":
-    setGlobal("_public_dir", path.join(process.cwd(), cli_args.public));
-    server.start(parseInt(cli_args.port));
+
+    server.start({
+      port: parseInt(cli_args.port),
+      activeDomain: cli_args["domain"],
+      activeCaching: cli_args["active-caching"]
+    });
     break;
 
   default:
@@ -52,4 +56,5 @@ switch (cli_args._[0]) {
       Logger.color("--help ", "FgYellow"),
       " to get a list of available command :)."
     );
-}
+  }
+  

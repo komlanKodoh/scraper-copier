@@ -72,6 +72,7 @@
             readyEventHandlersInstalled = true;
         }
     }
+    
 })("docReady", window);
 
 export default {};

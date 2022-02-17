@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.insertIn = exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
+exports.parseUrlQuery = exports.insertIn = exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
 const createInsertValues = (links) => {
     let values = "";
     const len = links.length;
@@ -44,4 +44,15 @@ const firstEncounter = (string, target, origin) => {
 exports.firstEncounter = firstEncounter;
 const insertIn = (receiver, index, stringToInsert) => receiver.slice(0, index) + stringToInsert + receiver.slice(index);
 exports.insertIn = insertIn;
+const parseUrlQuery = (urlQuery) => {
+    let query;
+    if (urlQuery[0] === "?")
+        query = urlQuery.slice(1);
+    else
+        query = urlQuery;
+    return JSON.parse('{"' + query.replace(/&/g, '","').replace(/=/g, '":"') + '"}', function (key, value) {
+        return key === "" ? value : decodeURIComponent(value);
+    });
+};
+exports.parseUrlQuery = parseUrlQuery;
 //# sourceMappingURL=index.js.map

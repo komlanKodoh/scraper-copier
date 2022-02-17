@@ -20,7 +20,7 @@ const ScraperManager_1 = __importDefault(require("./ScraperManager"));
 const axios_1 = __importDefault(require("axios"));
 const DomainTracker_1 = __importDefault(require("./DomainTracker"));
 class ProcessManager {
-    constructor() {
+    constructor(destDirectory) {
         this.metadata = {
             allLink: 0,
             httpRequest: 0,
@@ -31,12 +31,12 @@ class ProcessManager {
          * Logs file process when failed
          *
          * @param fileExtension file extension
-         * @param remoteURl remote url of the file
+         * @param remoteURL remote url of the file
          * @param data Data string to be logged
          */
-        this.logFailedWrite = (remoteURl, file, errorMessage) => {
+        this.logFailedWrite = (remoteURL, file, errorMessage) => {
             this.metadata.failedWrite++;
-            Logger_1.default.logFileProcess(file.extension, remoteURl.href, errorMessage, this.metadata, {
+            Logger_1.default.logFileProcess(file.extension, remoteURL.href, errorMessage, this.metadata, {
                 main: ["FgWhite"],
                 info: ["FgRed"],
             });
@@ -44,25 +44,28 @@ class ProcessManager {
         /**
          * Logs successful file Process;
          *
-         * @param remoteURl remote url of the file
+         * @param remoteURL remote url of the file
          * @param file file Object declared in index.d.ts
          * @param localDirectory path where saved on local machine
          *
          */
-        this.logSuccessfulWrite = (remoteURl, file, localDirectory) => {
+        this.logSuccessfulWrite = (remoteURL, file, localDirectory) => {
             this.metadata.successfulWrite++;
-            Logger_1.default.logFileProcess(file.extension, remoteURl.href, path_1.default.join(localDirectory, file.name), this.metadata, {
+            Logger_1.default.logFileProcess(file.extension, remoteURL.href, path_1.default.join(localDirectory, file.name), this.metadata, {
                 main: ["FgWhite"],
                 info: ["FgGreen"],
             });
-            this.domainTracker.lookAtFile(remoteURl, localDirectory);
+            this.domainTracker.lookAtFile(remoteURL, localDirectory);
         };
         this.db = {};
+        this.destDirectory = destDirectory;
         this.domainTracker = {};
         this.scraperManager = {};
     }
     cleanExit() {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.domainTracker.cleanExit();
+            yield this.scraperManager.cleanExit();
             console.log("\x1b[37m\nProcess Completed");
             console.log(`Total http request : ${Logger_1.default.color(this.metadata.httpRequest, "FgBlue")}  \n`);
             console.log(`Non completed process : ${Logger_1.default.color(this.metadata.httpRequest -
@@ -72,8 +75,6 @@ class ProcessManager {
             console.log(`Failed write : ${Logger_1.default.color(this.metadata.failedWrite, "FgRed")}`);
             console.log(`Successful write : ${Logger_1.default.color(this.metadata.successfulWrite, "FgBlue")}`);
             console.log("\n");
-            yield this.domainTracker.cleanExit();
-            yield this.scraperManager.cleanExit();
         });
     }
     /**
@@ -97,14 +98,23 @@ class ProcessManager {
      * @param file file Object
      * @returns axios get request response
      */
-    getRemoteFile(remoteURl, file) {
+    getRemoteFile(remoteURL, file) {
         return __awaiter(this, void 0, void 0, function* () {
             this.metadata.httpRequest += 1;
-            const axiosResponse = (yield axios_1.default
-                .get(remoteURl.href)
-                .catch((error) => null));
+            const axiosResponse = yield axios_1.default
+                .get(remoteURL.href, {
+                transformResponse: (res) => {
+                    return res;
+                },
+                headers: {
+                    // host: "canva.com",
+                    connection: "keep-alive",
+                    "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36',
+                }
+            })
+                .catch((error) => null);
             if (!axiosResponse) {
-                this.logFailedWrite(remoteURl, file, `Not Found`);
+                this.logFailedWrite(remoteURL, file, `Not Found`);
             }
             return axiosResponse;
         });

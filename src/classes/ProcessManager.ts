@@ -7,7 +7,7 @@ import axios, { AxiosResponse } from "axios";
 import DomainTracker from "./DomainTracker";
 
 interface WriteLogger {
-  (remoteURl: URL, file: FileObject, message: string): void;
+  (remoteURL: URL, file: FileObject, message: string): void;
 }
 
 export type processManagerMetadata = {
@@ -19,8 +19,10 @@ export type processManagerMetadata = {
 
 export default class ProcessManager {
   db: sqlite3.Database;
+  destDirectory: string;
   domainTracker: DomainTracker;
   scraperManager: ScraperManager;
+
   private metadata: processManagerMetadata = {
     allLink: 0,
     httpRequest: 0,
@@ -28,13 +30,16 @@ export default class ProcessManager {
     successfulWrite: 0,
   };
 
-  constructor() {
+  constructor(destDirectory: string) {
     this.db = {} as sqlite3.Database;
+    this.destDirectory = destDirectory;
     this.domainTracker = {} as DomainTracker;
     this.scraperManager = {} as ScraperManager;
   }
 
   async cleanExit() {
+    await this.domainTracker.cleanExit();
+    await this.scraperManager.cleanExit();
     console.log("\x1b[37m\nProcess Completed");
     console.log(
       `Total http request : ${Logger.color(
@@ -45,12 +50,13 @@ export default class ProcessManager {
 
     console.log(
       `Non completed process : ${Logger.color(
-      this.metadata.httpRequest -
-        this.metadata.successfulWrite -
-        this.metadata.failedWrite,
-      "FgYellow"
-    )}
-    `);
+        this.metadata.httpRequest -
+          this.metadata.successfulWrite -
+          this.metadata.failedWrite,
+        "FgYellow"
+      )}
+    `
+    );
     console.log(
       `Failed write : ${Logger.color(this.metadata.failedWrite, "FgRed")}`
     );
@@ -62,8 +68,6 @@ export default class ProcessManager {
     );
 
     console.log("\n");
-    await this.domainTracker.cleanExit();
-    await this.scraperManager.cleanExit();
   }
 
   /**
@@ -89,14 +93,27 @@ export default class ProcessManager {
    * @returns axios get request response
    */
 
-  async getRemoteFile(remoteURl: URL, file: FileObject) {
+  async getRemoteFile(remoteURL: URL, file: FileObject) {
     this.metadata.httpRequest += 1;
+
+
+
     const axiosResponse = (await axios
-      .get(remoteURl.href)
-      .catch((error) => null)) as AxiosResponse<string, any> | null;
+      .get(remoteURL.href, {
+        transformResponse: (res) => {
+          return res;
+        },
+        headers: {
+          // host: "canva.com",
+          connection: "keep-alive",
+      
+          "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36',
+        }
+      })
+      .catch((error) => null) as AxiosResponse<string, any> | null );
 
     if (!axiosResponse) {
-      this.logFailedWrite(remoteURl, file, `Not Found`);
+      this.logFailedWrite(remoteURL, file, `Not Found`);
     }
 
     return axiosResponse;
@@ -117,15 +134,15 @@ export default class ProcessManager {
    * Logs file process when failed
    *
    * @param fileExtension file extension
-   * @param remoteURl remote url of the file
+   * @param remoteURL remote url of the file
    * @param data Data string to be logged
    */
 
-  logFailedWrite: WriteLogger = (remoteURl, file, errorMessage) => {
+  logFailedWrite: WriteLogger = (remoteURL, file, errorMessage) => {
     this.metadata.failedWrite++;
     Logger.logFileProcess(
       file.extension,
-      remoteURl.href,
+      remoteURL.href,
       errorMessage,
       this.metadata,
       {
@@ -138,17 +155,17 @@ export default class ProcessManager {
   /**
    * Logs successful file Process;
    *
-   * @param remoteURl remote url of the file
+   * @param remoteURL remote url of the file
    * @param file file Object declared in index.d.ts
    * @param localDirectory path where saved on local machine
    *
    */
 
-  logSuccessfulWrite: WriteLogger = (remoteURl, file, localDirectory) => {
+  logSuccessfulWrite: WriteLogger = (remoteURL, file, localDirectory) => {
     this.metadata.successfulWrite++;
     Logger.logFileProcess(
       file.extension,
-      remoteURl.href,
+      remoteURL.href,
       path.join(localDirectory, file.name),
       this.metadata,
       {
@@ -157,7 +174,7 @@ export default class ProcessManager {
       }
     );
 
-    this.domainTracker.lookAtFile(remoteURl, localDirectory);
+    this.domainTracker.lookAtFile(remoteURL, localDirectory);
   };
 
   /**

@@ -66,7 +66,8 @@ describe("ProcessLink test", () => {
         expectedOutput: [],
       },
       {
-        description: "Https link should be kept identical if not having hash location",
+        description:
+          "Https link should be kept identical if not having hash location",
         input: [
           "https://github.blog/wp-content/uploads/2022/01/git-2-35-github-highlights.png?resize=1200%2C630",
           new URL("https://github.blog/"),
@@ -137,6 +138,15 @@ describe("ProcessLink test", () => {
       },
       {
         description:
+          "Should not include include location hash from retrieved link",
+        input: [
+          "static/js/vendor.c87d3841a0183ddd315e.js",
+          new URL("https://anvaka.github.io/fieldplay/"),
+        ],
+        expectedOutput: ["https://anvaka.github.io/fieldplay/static/js/vendor.c87d3841a0183ddd315e.js"],
+      },
+      {
+        description:
           "Should include queries but live out the location.hash from retrieved links",
         input: [
           "./randomText.html?query1=one#random subjects",
@@ -148,11 +158,14 @@ describe("ProcessLink test", () => {
       },
       {
         description: "",
-        input: ["./lib/fonts/fontawesome.woff2?14663396", new URL("https://www.w3schools.com/")],
+        input: [
+          "./lib/fonts/fontawesome.woff2?14663396",
+          new URL("https://www.w3schools.com/"),
+        ],
         expectedOutput: [
-          "https://www.w3schools.com/lib/fonts/fontawesome.woff2?14663396"
-        ]
-      }
+          "https://www.w3schools.com/lib/fonts/fontawesome.woff2?14663396",
+        ],
+      },
     ],
     processLinkTestFunction
   );

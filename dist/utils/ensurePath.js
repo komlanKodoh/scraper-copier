@@ -1,12 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ensurePath = void 0;
-const fs = require("fs");
+exports.fileExists = exports.ensurePath = void 0;
+const fs_1 = __importDefault(require("fs"));
 const ensurePath = (localPath, cb) => {
     return new Promise((resolve, reject) => {
         try {
-            if (!fs.existsSync(localPath))
-                fs.mkdirSync(localPath, { recursive: true });
+            if (!fs_1.default.existsSync(localPath))
+                fs_1.default.mkdirSync(localPath, { recursive: true });
             if (cb)
                 cb(true);
             resolve(true);
@@ -19,4 +22,14 @@ const ensurePath = (localPath, cb) => {
     });
 };
 exports.ensurePath = ensurePath;
+const fileExists = (path) => {
+    return new Promise((resolve, reject) => {
+        fs_1.default.access(path, (error) => {
+            if (error)
+                resolve(false);
+            resolve(true);
+        });
+    });
+};
+exports.fileExists = fileExists;
 //# sourceMappingURL=ensurePath.js.map

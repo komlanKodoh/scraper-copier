@@ -30,10 +30,10 @@ const cli_args = yargs_1.default
         description: "a list of authorized domain that the scrapper can extends to",
     });
 })
-    .command("serve <public>", "Serve the cloned website in local machine", (yargs) => {
+    .command("serve <domain>", "Serve the cloned website in local machine", (yargs) => {
     yargs
-        .positional("public", {
-        description: "public directory to static files create by server load",
+        .positional("domain", {
+        description: "domain Name without protocol (http / https)",
         type: "string",
     })
         .option("port", {
@@ -41,6 +41,11 @@ const cli_args = yargs_1.default
         type: "number",
         default: "3000",
         description: "port to which start the server on",
+    }).option("active-caching", {
+        alias: "c",
+        type: "boolean",
+        default: true,
+        description: "Fetches a requested resource if it has not been fetched yet. "
     });
 })
     .option("light", {

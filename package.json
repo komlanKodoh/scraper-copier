@@ -9,7 +9,7 @@
     "init": "sudo docker build -t server_mysql .",
     "start": "ts-node src/index.ts",
     "demo:load": "tsc && node ./dist/index.js load https://komlankodoh.com ./dest -d mongodb",
-    "demo:serve": "tsc && node ./dist/index.js serve ./dest/komlankodoh.com",
+    "serve": "node ./dist/index.js serve ./dest/jonny.me",
     "build": "tsc && chmod +x ./dist/index.js"
   },
   "bin": {

@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.processHTML = void 0;
 const path_1 = __importDefault(require("path"));
 const fs = require("fs");
 const Logger_1 = __importDefault(require("../classes/Logger"));
@@ -23,7 +24,7 @@ const utils_1 = require("../utils");
  * @returns processed html string
  */
 function processHTML(HTML) {
-    const scriptToInject = `<script src='/helpers/html'></script>`;
+    const scriptToInject = `<script src='/helpers/main.js'></script>`;
     const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
     if (!(matched === null || matched === void 0 ? void 0 : matched.index)) {
         throw new Error("Head is not found.");
@@ -31,6 +32,7 @@ function processHTML(HTML) {
     const insertIndex = matched.index + matched[0].length;
     return (0, utils_1.insertIn)(HTML, insertIndex, scriptToInject);
 }
+exports.processHTML = processHTML;
 /**
  * Write data string or json object to given directory under given fileName
  *
@@ -45,6 +47,7 @@ const writeFile = (data, localDirectory, file, callback) => __awaiter(void 0, vo
             data = JSON.stringify(data);
         }
         catch (err) {
+            console.log("The error", err);
             callback({ message: "could not convert object file to json" });
             return;
         }

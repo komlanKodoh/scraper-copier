@@ -1,4 +1,3 @@
-
 import path from "path";
 import { getFileExtension } from "./../lib/getPathAndFileName";
 import { processManagerMetadata } from "./ProcessManager";
@@ -82,7 +81,9 @@ const logFileProcess = (
     `${color(
       `${metadata.successfulWrite}/${metadata.allLink}`,
       "FgCyan"
-    )}\t\n${mainStyles}- File (${fileExtension}) : ${url}\n   |_ ${infoStyles}${data}\n`
+    )}\t\n${mainStyles}- File (${fileExtension}) : ${url}\n   |_ ${infoStyles}${data}\n${getStyle(
+      ["Reset"]
+    )}`
   );
 };
 

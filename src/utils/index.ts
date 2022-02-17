@@ -49,3 +49,16 @@ export const insertIn = (
   index: number,
   stringToInsert: string
 ) => receiver.slice(0, index) + stringToInsert + receiver.slice(index);
+
+export const parseUrlQuery = (urlQuery: string) => {
+  let query;
+  if (urlQuery[0] === "?") query = urlQuery.slice(1);
+  else query = urlQuery;
+
+  return JSON.parse(
+    '{"' + query.replace(/&/g, '","').replace(/=/g, '":"') + '"}',
+    function (key, value) {
+      return key === "" ? value : decodeURIComponent(value);
+    }
+  ) as object;
+};

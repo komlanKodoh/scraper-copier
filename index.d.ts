@@ -12,6 +12,6 @@ declare type FileObject = {
 declare type CustomError = {
   message: string,
 }
-declare var _public_dir : string;
-declare var _target_directory: string;
+
+
 declare var _authorized_domain : RegExp[];

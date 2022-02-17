@@ -19,14 +19,14 @@ const processLink_1 = __importDefault(require("./processLink"));
 const ensurePath_1 = require("../utils/ensurePath");
 const getPathAndFileName_1 = __importDefault(require("./getPathAndFileName"));
 const cheerio = require("cheerio");
-const cloneFile = (url, processManager) => __awaiter(void 0, void 0, void 0, function* () {
+const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, void 0, function* () {
     const urlObject = new URL(url);
     const scraperManager = processManager.scraperManager;
     try {
         // change link visibility to prevent it from being scrapped;
         scraperManager.see(url);
         const authorizedDomains = global._authorized_domain;
-        const [localDirectory, fileName, fileExtension] = (0, getPathAndFileName_1.default)(urlObject, path_1.default.join(process.cwd(), global._target_directory || ""));
+        const [localDirectory, fileName, fileExtension] = (0, getPathAndFileName_1.default)(urlObject, processManager.destDirectory);
         const file = {
             name: fileName,
             extension: fileExtension,
@@ -74,7 +74,6 @@ const cloneFile = (url, processManager) => __awaiter(void 0, void 0, void 0, fun
             const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
             let match = myRegexp.exec(response.data);
             while (match != null) {
-                console.log;
                 (0, processLink_1.default)(match[2], urlObject, link_to_save);
                 match = myRegexp.exec(response.data);
             }

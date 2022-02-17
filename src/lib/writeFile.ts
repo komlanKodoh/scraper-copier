@@ -9,9 +9,9 @@ import { insertIn } from "../utils";
  * @param data string content of html document
  * @returns processed html string
  */
-function processHTML(HTML: string): string {
+export function processHTML(HTML: string): string {
   const scriptToInject =
-    `<script src='/helpers/html'></script>`;
+    `<script src='/helpers/main.js'></script>`;
 
   const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
 
@@ -43,6 +43,7 @@ const writeFile = async (
     try {
       data = JSON.stringify(data);
     } catch (err) {
+      console.log("The error", err)
       callback({ message: "could not convert object file to json" });
       return;
     }

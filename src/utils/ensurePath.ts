@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 export const ensurePath: (
   localPath: string,
@@ -16,4 +16,13 @@ export const ensurePath: (
       return resolve(false);
     }
   });
+};
+
+export const fileExists = (path: string) => {
+  return new Promise((resolve, reject) => {
+    fs.access(path, (error) => {
+      if(error) resolve(false);
+      resolve(true)
+    })
+  })
 };

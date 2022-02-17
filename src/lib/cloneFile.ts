@@ -8,7 +8,11 @@ import getPathAndFileName from "./getPathAndFileName";
 
 const cheerio = require("cheerio");
 
-const cloneFile = async (url: string, processManager: ProcessManager) => {
+const cloneFile = async (
+  url: string,
+  processManager: ProcessManager,
+  overrides?: { destDirectory: string }
+) => {
   const urlObject = new URL(url);
   const scraperManager = processManager.scraperManager;
   try {
@@ -19,7 +23,7 @@ const cloneFile = async (url: string, processManager: ProcessManager) => {
 
     const [localDirectory, fileName, fileExtension] = getPathAndFileName(
       urlObject,
-      path.join(process.cwd(), global._target_directory || "")
+      processManager.destDirectory
     );
 
     const file: FileObject = {
@@ -42,10 +46,17 @@ const cloneFile = async (url: string, processManager: ProcessManager) => {
     let link_to_save: string[] = [];
 
     if (["png", "jpg", "jpeg", "gif", "svg"].includes(fileExtension)) {
-      await downloadImg(url, path.join(localDirectory, fileName), file,(error) => {
-        if (error ) processManager.logFailedWrite(urlObject, file, error.message)
-        else  processManager.logSuccessfulWrite(urlObject, file, localDirectory);
-      });
+      await downloadImg(
+        url,
+        path.join(localDirectory, fileName),
+        file,
+        (error) => {
+          if (error)
+            processManager.logFailedWrite(urlObject, file, error.message);
+          else
+            processManager.logSuccessfulWrite(urlObject, file, localDirectory);
+        }
+      );
       return;
     } else if (["html", "htm"].includes(fileExtension)) {
       const $ = cheerio.load(response.data);
@@ -79,7 +90,6 @@ const cloneFile = async (url: string, processManager: ProcessManager) => {
 
       let match = myRegexp.exec(response.data);
       while (match != null) {
-        console.log;
         processLink(match[2], urlObject, link_to_save);
         match = myRegexp.exec(response.data);
       }
@@ -91,8 +101,6 @@ const cloneFile = async (url: string, processManager: ProcessManager) => {
       if (error) processManager.logFailedWrite(urlObject, file, error.message);
       else processManager.logSuccessfulWrite(urlObject, file, localDirectory);
     });
-
-    
   } catch (error: any) {
     switch (error.code) {
       case "ERR_INVALID_URL":

@@ -59,7 +59,7 @@ const logFileProcess = (fileExtension, url, data, metadata, config) => {
     const mainStyles = getStyle(config.main);
     const infoStyles = getStyle(config.info);
     // (metadata.failedWrite && color(`Failed : ${metadata.}`, "FgRed")) || ""
-    console.log(`${color(`${metadata.successfulWrite}/${metadata.allLink}`, "FgCyan")}\t\n${mainStyles}- File (${fileExtension}) : ${url}\n   |_ ${infoStyles}${data}\n`);
+    console.log(`${color(`${metadata.successfulWrite}/${metadata.allLink}`, "FgCyan")}\t\n${mainStyles}- File (${fileExtension}) : ${url}\n   |_ ${infoStyles}${data}\n${getStyle(["Reset"])}`);
 };
 exports.default = {
     color,

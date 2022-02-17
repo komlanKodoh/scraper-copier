@@ -29,11 +29,14 @@ switch (cli_args_1.default._[0]) {
         (0, index_1.setGlobal)("_authorized_domain", emptyArray
             .concat(cli_args_1.default["authorized-domain"] || [], startingUrls.map((url) => new URL(url).hostname))
             .map((domain) => new RegExp(domain, "i")));
-        scrapper_1.default.start(startingUrls);
+        scrapper_1.default.start(startingUrls, path_1.default.join(process.cwd(), cli_args_1.default.dest || ""));
         break;
     case "serve":
-        (0, index_1.setGlobal)("_public_dir", path_1.default.join(process.cwd(), cli_args_1.default.public));
-        server_1.default.start(parseInt(cli_args_1.default.port));
+        server_1.default.start({
+            port: parseInt(cli_args_1.default.port),
+            activeDomain: cli_args_1.default["domain"],
+            activeCaching: cli_args_1.default["active-caching"]
+        });
         break;
     default:
         console.log("Welcome to scraper-copier, type ", Logger_1.default.color("--help ", "FgYellow"), " to get a list of available command :).");
