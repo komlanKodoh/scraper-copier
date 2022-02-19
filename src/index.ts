@@ -6,6 +6,8 @@ import cli_args from "./cli_args";
 import server from "./server";
 import path from "path";
 import Logger from "./classes/Logger";
+import { showHidden } from "yargs";
+import domainHandler from "./handleDomainInteraction";
 
 if (process.platform === "win32") {
   var rl = require("readline").createInterface({
@@ -26,7 +28,6 @@ switch (cli_args._[0]) {
 
     setGlobal("_target_directory", cli_args.dest);
 
-
     const emptyArray: string[] = [];
     setGlobal(
       "_authorized_domain",
@@ -38,23 +39,29 @@ switch (cli_args._[0]) {
         .map((domain) => new RegExp(domain, "i")) as RegExp[]
     );
 
-    scrapper.start(startingUrls, path.join(process.cwd(), cli_args.dest || ""));
+    scrapper.start(
+      startingUrls,
+      path.join(process.cwd(), cli_args.dest || ""),
+      parseInt(cli_args["max-request-per-second"])
+    );
     break;
 
   case "serve":
-
     server.start({
       port: parseInt(cli_args.port),
       activeDomain: cli_args["domain"],
-      activeCaching: cli_args["active-caching"]
+      activeCaching: cli_args["active-caching"],
     });
+    break;
+
+  case "domain":
+    domainHandler(cli_args);
     break;
 
   default:
     console.log(
-      "Welcome to scraper-copier, type ",
+      "\nWelcome to scraper-copier, type ",
       Logger.color("--help ", "FgYellow"),
-      " to get a list of available command :)."
+      " to get a list of available command :).\n"
     );
-  }
-  
+}

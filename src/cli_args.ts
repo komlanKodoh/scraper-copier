@@ -1,5 +1,3 @@
-import { array } from "yargs";
-
 import yargs from "yargs";
 const cli_args = yargs
   .command(
@@ -17,7 +15,7 @@ const cli_args = yargs
         })
         .option("database", {
           alias: "d",
-          description: "give database to start the process from",
+          description: "choose the database to start the process from",
         })
         .option("roots", {
           alias: "r",
@@ -29,6 +27,11 @@ const cli_args = yargs
           type: "array",
           description:
             "a list of authorized domain that the scrapper can extends to",
+        })
+        .option("max-request-per-second", {
+          alias: "m",
+          type: "number",
+          description: "",
         });
     }
   )
@@ -46,14 +49,38 @@ const cli_args = yargs
           type: "number",
           default: "3000",
           description: "port to which start the server on",
-        }).option("active-caching", {
+        })
+        .option("active-caching", {
           alias: "c",
           type: "boolean",
           default: true,
-          description: "Fetches a requested resource if it has not been fetched yet. "
+          description:
+            "Fetches a requested resource if it has not been fetched yet. ",
         });
     }
   )
+  .command("domain", "Interact with scraper cached data", (yargs) => {
+    yargs
+      .option("database", {
+        alias: "d",
+        description: "choose the database to start the process from",
+      })
+      .command("show", "shows all domain previously scrapped")
+
+      .option("port", {
+        alias: "p",
+        type: "number",
+        default: "3000",
+        description: "port to which start the server on",
+      })
+      .option("active-caching", {
+        alias: "c",
+        type: "boolean",
+        default: true,
+        description:
+          "Fetches a requested resource if it has not been fetched yet. ",
+      });
+  })
   .option("light", {
     alias: "l",
     description:
@@ -64,6 +91,14 @@ const cli_args = yargs
   .help()
   .alias("help", "h").argv;
 
-type cli_args = typeof cli_args & {"authorized-domain": string[], "active-caching" : boolean ,"domain": string, "port": string, "dest": string};
+type cli_args = typeof cli_args & {
+  domain: string;
+  port: string;
+  dest: string;
+  "active-caching": boolean;
+  "authorized-domain": string[];
+  "max-request-per-second": string;
+};
+
 
 export default cli_args as cli_args;

@@ -104,6 +104,13 @@ class DomainTracker {
             return directories.map((directory) => directory.split(hostname)[0]);
         });
     }
+    getAllDomains() {
+        return new Promise((resolve) => {
+            this.db.all(`SELECT DISTINCT hostname FROM domainTracker;`, (_, rows) => {
+                resolve(rows.map(row => row.hostname) || []);
+            });
+        });
+    }
 }
 exports.default = DomainTracker;
 //# sourceMappingURL=DomainTracker.js.map

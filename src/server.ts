@@ -1,172 +1,185 @@
 import path from "path";
-import Logger from "./classes/Logger";
-import getPathAndFileName from "./lib/getPathAndFileName";
-import fs from "fs";
 import express from "express";
-import ProcessManager from "./classes/ProcessManager";
-import axios from "axios";
+import request from "request";
+import Logger from "./classes/Logger";
 import cloneFile from "./lib/cloneFile";
 import { findFile } from "./lib/findFile";
-import { processHTML } from "./lib/writeFile";
-import { setGlobal } from "./utils";
+import ProcessManager from "./classes/ProcessManager";
+import { domainIsValid } from "./utils/domainIsValid";
 
 const app = express();
-const DefaultDirectory = path.join(process.cwd(), "./dest");
+const DefaultDirectory = path.join(__dirname, "./dest");
 
-const config = {
+export const config = {
   port: "3000",
   activeDomain: "",
   activeCaching: true,
 };
 
-(async () => {
-  const dbPath = path.join(__dirname, ".default_scraper.db");
+// type d = {[K in keyof request.Response]: string}
+
+function proxy(url: string, res: any) {
+  // return console.log("I crashed in here")
+  request(url, undefined, (error, response, body) => {
+    if ((error.code = "EAI_AGAIN")) {
+      console.log(
+        Logger.color(
+          "Failed to retrieve and send the data, Check your internet connection",
+          "FgRed"
+        )
+      );
+    }
+  }).pipe(res);
+  console.log(
+    "File successfully forwarded to " +
+      Logger.color("External servers  < -- >  ", "FgCyan") +
+      Logger.color(url, "FgGreen")
+  );
+}
+
+const startServer = async (apiConfig: {
+  port: number;
+  activeDomain: string;
+  activeCaching: boolean;
+}) => {
+  // loading configs to the local config object
+  Object.assign(config, apiConfig);
 
   const processManager = new ProcessManager(DefaultDirectory);
 
+  // path to the database to use for the process.
+  // the database holds information like a mapping from domain to
+  // local Directories is also used to saved link after scrapping remoteURLs;
+  const dbPath = path.join(__dirname, ".default_scraper.db");
+
   await processManager.initDb(dbPath);
-
-  const domainTracker = await processManager.initDomainTracker();
   await processManager.initScraperManager([]);
+  const domainTracker = await processManager.initDomainTracker();
 
-  const directories = await domainTracker.getRootDirectories(
-    config.activeDomain
-  );
-
-  if (directories.length < 1 && !config.activeCaching) {
-    console.log(
-      Logger.color(
-        `\n Domain provided has never been fetched : ${config.activeDomain}`,
-        "FgRed"
-      ),
-      '\n if this is intended, try running with active caching "-c" on.'
-    );
-  }
+  if (!(await domainIsValid(domainTracker, config.activeDomain))) return;
 
   app.get<{}, {}, {}, { newDomain: "string" }>("/update-domain", (req, res) => {
     config.activeDomain = req.query.newDomain;
   });
 
-  app.get("/myWorker.js", (_, res) => {
-    res.sendFile(path.join(__dirname, "./helpers/sw.js"));
-  });
-
-  app.get("/helpers/matchingURL", () => {});
-
   app.use("/helpers", express.static(path.join(__dirname, "helpers")));
+  app.get("/myWorker.js", (req, res) =>
+    res.sendFile(path.join(__dirname, "./helpers/myWorker.js"))
+  );
 
-  app.get<{}, {}, {}, { url: string; updateDomain: string }>(
-    "/",
-    async (req, res) => {
-      let resourceURL = decodeURIComponent(req.query.url);
-      let shouldUpdateDomain = req.query.updateDomain;
+  app.get<{}, {}, {}, { request: string }>("/proxy", async (req, res) => {
+    // get the required from the url query;
+    let originalRequest: any;
+    const requestTargetURL = Buffer.from(req.query.request, "base64").toString(
+      "utf8"
+    );
 
-      if (!resourceURL) return;
-
-      const resourceURLObject = new URL(resourceURL);
-      if (shouldUpdateDomain === "true") {
-        config.activeDomain = resourceURLObject.host;
-      }
-
-      const requestURL = resourceURL.replace(
-        /localhost:[0-9]+/,
-        config.activeDomain
+    try {
+      originalRequest = JSON.parse(requestTargetURL);
+    } catch (err) {
+      return console.log(
+        Logger.color(`Failed to parse the requested resources:`, "FgRed"),
+        Logger.color(`${req.url.slice(50)}`, "FgGreen")
       );
+    }
 
+    originalRequest.headers = req.headers;
+
+    if (!originalRequest?.url) return;
+
+    let file = processManager.createFile(
+      originalRequest.url.replace(
+        `localhost:${config.port}`,
+        config.activeDomain
+      ),
+      ""
+    );
+
+    if (!file)
+      return res.status(404).send({
+        error: "INVALID_URL",
+        message: `url ${req.url} is not valid`,
+      });
+
+    let domainShouldBeCached = config.activeDomain === file.remoteURL.hostname;
+
+    if (!domainShouldBeCached) return proxy(originalRequest.url, res);
+    else {
       const directories = await domainTracker.getRootDirectories(
         config.activeDomain
       );
 
-      const file = await findFile(directories, requestURL);
-
-      console.log(
-        "File successfully served From " +
-          Logger.color("LocalStorage < -- >  ", "FgBlue") +
-          Logger.color(requestURL, "FgGreen")
+      // We first find the corresponding file from the local machine, if the
+      // file is found we send it as the response;
+      const fileSavedInStorage = await findFile(
+        directories,
+        file.remoteURL.href
       );
 
-      if (file) return res.sendFile(file);
-
-      const response = await axios.get<string>(requestURL).catch(() => {
+      if (fileSavedInStorage) {
         console.log(
-          "File " +
-            Logger.color("Not Found  < -- >", "FgRed") +
-            Logger.color(requestURL, "FgGreen")
+          "File successfully served From  " +
+            Logger.color("LocalStorage      < -- >  ", "FgBlue") +
+            Logger.color(file.remoteURL.href, "FgGreen")
         );
-      });
-
-      if (response) {
-        console.log(
-          "File successfully served From " +
-            Logger.color("RemoteURL    < -- >  ", "FgYellow") +
-            Logger.color(requestURL, "FgGreen")
-        );
-
-        if (/text\/html/.test(response.headers["content-type"])) {
-          try {
-            response.data = processHTML(response.data);
-          } catch {
-            console.log(
-              Logger.color(
-                "- File : Could not inject js " + requestURL,
-                "FgRed"
-              )
-            );
-          }
-        }
-
-        res.set(response.headers);
-        res.send(response.data);
-
-        if (config.activeCaching) {
-          cloneFile(requestURL, processManager, {
-            destDirectory: directories[0],
-          });
-        }
+        res.sendFile(fileSavedInStorage);
         return;
       }
 
-      res.sendStatus(404);
-    }
-  );
-})();
+      // if the file is not found in the local storage,
+      // we proxy the request to its original destination
+      proxy(originalRequest.url, res);
 
-class ServerAPI {
-  constructor() {}
-
-  static start(apiConfig: {
-    port: number;
-    activeDomain: string;
-    activeCaching: boolean;
-  }) {
-    Object.assign(config, apiConfig);
-
-    const server = app.listen(config.port, () => {
       console.log(
-        `\nApp listening on port ${Logger.color(config.port, "FgGreen")}`
+        "File successfully served From  " +
+          Logger.color("Remote URL        < -- >  ", "FgBlue") +
+          Logger.color(file.remoteURL.href, "FgGreen")
       );
-    });
 
-    server.on("error", async (error: any) => {
-      switch (error.code) {
-        case "EADDRINUSE":
+      // We finally clone the file in the background;
 
+      cloneFile(file.remoteURL.href, processManager, {
+        destDirectory: directories[0],
+      });
+      processManager.incrementAllLink(1);
+    }
 
-          console.log(
-            `\nPort ${Logger.color(
-              `${config.port} already in use`,
-              "FgRed"
-            )} . \nTry finishing the process on port ${Logger.color(
-              config.port,
-              "FgBlue"
-            )} or use option -port ( alias -p ) to choose a different port.\n`
-          );
+    res.sendStatus(404);
+  });
 
-          process.exit()
-          break;
-      }
-    });
-  }
-}
+  app.get("/", (_, res) => {
+    res.sendFile(path.join(__dirname, "./helpers/index.html"));
+  });
+
+  // Starting the server;
+  const server = app.listen(config.port, () => {
+    console.log(
+      `\nApp listening on port ${Logger.color(config.port, "FgGreen")}\n`
+    );
+  });
+
+  //setting up the error checking;
+  server.on("error", async (error: any) => {
+    switch (error.code) {
+      case "EADDRINUSE":
+        console.log(
+          `\nPort ${Logger.color(
+            `${config.port} already in use`,
+            "FgRed"
+          )} . \nTry finishing the process on port ${Logger.color(
+            config.port,
+            "FgBlue"
+          )} or use option -port ( alias -p ) to choose a different port.\n`
+        );
+
+        process.exit();
+        break;
+    }
+  });
+};
+
+const ServerAPI = {
+  start: startServer,
+};
 
 export default ServerAPI;

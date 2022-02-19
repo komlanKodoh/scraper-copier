@@ -3,7 +3,7 @@ Scraper copier is a Command Line Interface (CLI) that replicate remote domain to
 
 ## Instalation 
 The Installation of  **scraper copier** can be completed by following the following steps.
-
+> **_NOTE:_** We assume that you have both **node** and **npm** installed.
  1. Clone repository from github and cd into the repository
 ```bash
 git clone https://github.com/Behemoth11/scraper-copier.git && 
@@ -18,7 +18,7 @@ At that point, you should be able to run the node script located in the **dist**
 ```bash
 node ./dist/index.js
 ```
-
+[Link to video tutorial](https://res.cloudinary.com/dkoatnxem/video/upload/v1641495182/out-2_1_1_j4iz1j.mp4)
 ## Passing argument to process
 
 Argument can be passed to the node process as you would for any other CLI.

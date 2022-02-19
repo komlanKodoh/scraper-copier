@@ -7,6 +7,7 @@ declare type link = {
 declare type FileObject = {
   name: string;
   extension: string;
+  remoteURL: URL
 };
 
 declare type CustomError = {

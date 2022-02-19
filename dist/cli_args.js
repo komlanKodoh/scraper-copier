@@ -17,7 +17,7 @@ const cli_args = yargs_1.default
     })
         .option("database", {
         alias: "d",
-        description: "give database to start the process from",
+        description: "choose the database to start the process from",
     })
         .option("roots", {
         alias: "r",
@@ -28,6 +28,11 @@ const cli_args = yargs_1.default
         alias: "d",
         type: "array",
         description: "a list of authorized domain that the scrapper can extends to",
+    })
+        .option("max-request-per-second", {
+        alias: "m",
+        type: "number",
+        description: "",
     });
 })
     .command("serve <domain>", "Serve the cloned website in local machine", (yargs) => {
@@ -41,11 +46,32 @@ const cli_args = yargs_1.default
         type: "number",
         default: "3000",
         description: "port to which start the server on",
-    }).option("active-caching", {
+    })
+        .option("active-caching", {
         alias: "c",
         type: "boolean",
         default: true,
-        description: "Fetches a requested resource if it has not been fetched yet. "
+        description: "Fetches a requested resource if it has not been fetched yet. ",
+    });
+})
+    .command("domain", "Interact with scraper cached data", (yargs) => {
+    yargs
+        .option("database", {
+        alias: "d",
+        description: "choose the database to start the process from",
+    })
+        .command("show", "shows all domain previously scrapped")
+        .option("port", {
+        alias: "p",
+        type: "number",
+        default: "3000",
+        description: "port to which start the server on",
+    })
+        .option("active-caching", {
+        alias: "c",
+        type: "boolean",
+        default: true,
+        description: "Fetches a requested resource if it has not been fetched yet. ",
     });
 })
     .option("light", {

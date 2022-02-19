@@ -1,3 +1,4 @@
+import { ScrapperFile } from "./../classes/ScrapperFile";
 import path from "path";
 import writeFile from "./writeFile";
 import downloadImg from "./downloadImg";
@@ -5,6 +6,7 @@ import processLink from "./processLink";
 import { ensurePath } from "../utils/ensurePath";
 import ProcessManager from "../classes/ProcessManager";
 import getPathAndFileName from "./getPathAndFileName";
+import { contentTypeToFileExtension } from "./contentTypeToFileExtension";
 
 const cheerio = require("cheerio");
 
@@ -14,51 +16,50 @@ const cloneFile = async (
   overrides?: { destDirectory: string }
 ) => {
   const urlObject = new URL(url);
+
   const scraperManager = processManager.scraperManager;
+  scraperManager.see(url);
+
+  const file = processManager.createFile(url, overrides?.destDirectory);
+  if (!file) return;
+
   try {
     // change link visibility to prevent it from being scrapped;
-    scraperManager.see(url);
 
+    // a list of domain we are allowed to scrape given, set in the global scope.
     const authorizedDomains = global._authorized_domain;
 
-    const [localDirectory, fileName, fileExtension] = getPathAndFileName(
-      urlObject,
-      processManager.destDirectory
-    );
-
-    const file: FileObject = {
-      name: fileName,
-      extension: fileExtension,
-    };
-
-    if (!(await ensurePath(localDirectory))) {
+    if (!(await ensurePath(file.directory))) {
       processManager.logSuccessfulWrite(
-        urlObject,
         file,
-        `could not create file ${localDirectory}`
+        `could not create file ${file.directory}`
       );
     }
 
-    const response = await processManager.getRemoteFile(urlObject, file);
+    const response = await processManager.getRemoteFile(file);
 
     if (!response) return;
 
     let link_to_save: string[] = [];
 
-    if (["png", "jpg", "jpeg", "gif", "svg"].includes(fileExtension)) {
+    // update of the previously guessed fileExtension to one that matches the response countertype
+    const fileContentType = response.headers["content-type"];
+
+    const realFileExtension = contentTypeToFileExtension(fileContentType);
+    if (realFileExtension) file.extension = realFileExtension;
+
+    if (["png", "jpg", "jpeg", "gif", "svg"].includes(file.extension)) {
       await downloadImg(
         url,
-        path.join(localDirectory, fileName),
+        path.join(file.directory, file.name),
         file,
         (error) => {
-          if (error)
-            processManager.logFailedWrite(urlObject, file, error.message);
-          else
-            processManager.logSuccessfulWrite(urlObject, file, localDirectory);
+          if (error) processManager.logFailedWrite(file, error.message);
+          else processManager.logSuccessfulWrite(file, "");
         }
       );
       return;
-    } else if (["html", "htm"].includes(fileExtension)) {
+    } else if (["html", "htm"].includes(file.extension)) {
       const $ = cheerio.load(response.data);
 
       const links: string = $("a");
@@ -85,7 +86,7 @@ const cloneFile = async (
         const _image_link = $(image_link).attr("src");
         processLink(_image_link, urlObject, link_to_save, authorizedDomains);
       });
-    } else if (fileExtension === "css") {
+    } else if (file.extension === "css") {
       const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
 
       let match = myRegexp.exec(response.data);
@@ -97,16 +98,15 @@ const cloneFile = async (
 
     await processManager.scraperManager.add(link_to_save);
 
-    await writeFile(response.data, localDirectory, file, (error) => {
-      if (error) processManager.logFailedWrite(urlObject, file, error.message);
-      else processManager.logSuccessfulWrite(urlObject, file, localDirectory);
+    await writeFile(response.data, file, (error) => {
+      if (error) processManager.logFailedWrite(file, error.message);
+      else processManager.logSuccessfulWrite(file);
     });
   } catch (error: any) {
     switch (error.code) {
       case "ERR_INVALID_URL":
         processManager.logFailedWrite(
-          urlObject,
-          { extension: "unknown", name: "unknown" },
+          file,
           "Could not load the file, Url is invalid"
         );
 

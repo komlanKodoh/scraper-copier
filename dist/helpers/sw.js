@@ -13,8 +13,7 @@ self.addEventListener("install", () => {
 });
 self.addEventListener("fetch", function (event) {
     const url = event.request.url;
-    if (!/^https*:\/\/localhost:[0-9]/.test(url) ||
-        /^https*:\/\/localhost:[0-9]+\/(helpers|\?url)/.test(url)) {
+    if (/^https*:\/\/localhost:[0-9]+\/(helpers|\?url)/.test(url)) {
         // console.log("these request were served normally", url);
         return;
     }

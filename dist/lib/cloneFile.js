@@ -17,37 +17,41 @@ const writeFile_1 = __importDefault(require("./writeFile"));
 const downloadImg_1 = __importDefault(require("./downloadImg"));
 const processLink_1 = __importDefault(require("./processLink"));
 const ensurePath_1 = require("../utils/ensurePath");
-const getPathAndFileName_1 = __importDefault(require("./getPathAndFileName"));
+const contentTypeToFileExtension_1 = require("./contentTypeToFileExtension");
 const cheerio = require("cheerio");
 const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, void 0, function* () {
     const urlObject = new URL(url);
     const scraperManager = processManager.scraperManager;
+    scraperManager.see(url);
+    const file = processManager.createFile(url, overrides === null || overrides === void 0 ? void 0 : overrides.destDirectory);
+    if (!file)
+        return;
     try {
         // change link visibility to prevent it from being scrapped;
-        scraperManager.see(url);
+        // a list of domain we are allowed to scrape given, set in the global scope.
         const authorizedDomains = global._authorized_domain;
-        const [localDirectory, fileName, fileExtension] = (0, getPathAndFileName_1.default)(urlObject, processManager.destDirectory);
-        const file = {
-            name: fileName,
-            extension: fileExtension,
-        };
-        if (!(yield (0, ensurePath_1.ensurePath)(localDirectory))) {
-            processManager.logSuccessfulWrite(urlObject, file, `could not create file ${localDirectory}`);
+        if (!(yield (0, ensurePath_1.ensurePath)(file.directory))) {
+            processManager.logSuccessfulWrite(file, `could not create file ${file.directory}`);
         }
-        const response = yield processManager.getRemoteFile(urlObject, file);
+        const response = yield processManager.getRemoteFile(file);
         if (!response)
             return;
         let link_to_save = [];
-        if (["png", "jpg", "jpeg", "gif", "svg"].includes(fileExtension)) {
-            yield (0, downloadImg_1.default)(url, path_1.default.join(localDirectory, fileName), file, (error) => {
+        // update of the previously guessed fileExtension to one that matches the response countertype
+        const fileContentType = response.headers["content-type"];
+        const realFileExtension = (0, contentTypeToFileExtension_1.contentTypeToFileExtension)(fileContentType);
+        if (realFileExtension)
+            file.extension = realFileExtension;
+        if (["png", "jpg", "jpeg", "gif", "svg"].includes(file.extension)) {
+            yield (0, downloadImg_1.default)(url, path_1.default.join(file.directory, file.name), file, (error) => {
                 if (error)
-                    processManager.logFailedWrite(urlObject, file, error.message);
+                    processManager.logFailedWrite(file, error.message);
                 else
-                    processManager.logSuccessfulWrite(urlObject, file, localDirectory);
+                    processManager.logSuccessfulWrite(file, "");
             });
             return;
         }
-        else if (["html", "htm"].includes(fileExtension)) {
+        else if (["html", "htm"].includes(file.extension)) {
             const $ = cheerio.load(response.data);
             const links = $("a");
             const script = $("script");
@@ -70,7 +74,7 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
                 (0, processLink_1.default)(_image_link, urlObject, link_to_save, authorizedDomains);
             });
         }
-        else if (fileExtension === "css") {
+        else if (file.extension === "css") {
             const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
             let match = myRegexp.exec(response.data);
             while (match != null) {
@@ -79,17 +83,17 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
             }
         }
         yield processManager.scraperManager.add(link_to_save);
-        yield (0, writeFile_1.default)(response.data, localDirectory, file, (error) => {
+        yield (0, writeFile_1.default)(response.data, file, (error) => {
             if (error)
-                processManager.logFailedWrite(urlObject, file, error.message);
+                processManager.logFailedWrite(file, error.message);
             else
-                processManager.logSuccessfulWrite(urlObject, file, localDirectory);
+                processManager.logSuccessfulWrite(file);
         });
     }
     catch (error) {
         switch (error.code) {
             case "ERR_INVALID_URL":
-                processManager.logFailedWrite(urlObject, { extension: "unknown", name: "unknown" }, "Could not load the file, Url is invalid");
+                processManager.logFailedWrite(file, "Could not load the file, Url is invalid");
                 break;
             default:
                 throw error;

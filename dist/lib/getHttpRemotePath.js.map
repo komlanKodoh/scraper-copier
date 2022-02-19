@@ -1,1 +1,0 @@
-{"version":3,"file":"getHttpRemotePath.js","sourceRoot":"","sources":["../../src/lib/getHttpRemotePath.ts"],"names":[],"mappings":";;;;;AAAA,gEAAwC;AAExC,SAAS,iBAAiB,CAAC,IAAY,EAAE,eAAoB;IAC3D,OAAO,IAAA,qBAAW,EAAC,IAAI,EAAE,eAAe,EAAE,EAAE,EAAE,CAAC,IAAI,MAAM,CAAC,GAAG,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACtE,CAAC;AACD,kBAAe,iBAAiB,CAAC"}

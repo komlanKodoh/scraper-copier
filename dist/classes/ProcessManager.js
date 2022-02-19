@@ -19,8 +19,10 @@ const ensurePath_1 = require("../utils/ensurePath");
 const ScraperManager_1 = __importDefault(require("./ScraperManager"));
 const axios_1 = __importDefault(require("axios"));
 const DomainTracker_1 = __importDefault(require("./DomainTracker"));
+const ScrapperFile_1 = require("./ScrapperFile");
+const Limiter_1 = require("./Limiter");
 class ProcessManager {
-    constructor(destDirectory) {
+    constructor(destDirectory, config) {
         this.metadata = {
             allLink: 0,
             httpRequest: 0,
@@ -34,9 +36,9 @@ class ProcessManager {
          * @param remoteURL remote url of the file
          * @param data Data string to be logged
          */
-        this.logFailedWrite = (remoteURL, file, errorMessage) => {
+        this.logFailedWrite = (file, errorMessage) => {
             this.metadata.failedWrite++;
-            Logger_1.default.logFileProcess(file.extension, remoteURL.href, errorMessage, this.metadata, {
+            Logger_1.default.logFileProcess(file.extension, file.remoteURL.href, errorMessage || "", this.metadata, {
                 main: ["FgWhite"],
                 info: ["FgRed"],
             });
@@ -49,21 +51,24 @@ class ProcessManager {
          * @param localDirectory path where saved on local machine
          *
          */
-        this.logSuccessfulWrite = (remoteURL, file, localDirectory) => {
+        this.logSuccessfulWrite = (file) => {
             this.metadata.successfulWrite++;
-            Logger_1.default.logFileProcess(file.extension, remoteURL.href, path_1.default.join(localDirectory, file.name), this.metadata, {
+            Logger_1.default.logFileProcess(file.extension, file.remoteURL.href, path_1.default.join(file.directory, file.name), this.metadata, {
                 main: ["FgWhite"],
                 info: ["FgGreen"],
             });
-            this.domainTracker.lookAtFile(remoteURL, localDirectory);
+            this.domainTracker.lookAtFile(file.remoteURL, file.directory);
         };
+        this.config = config || {};
         this.db = {};
         this.destDirectory = destDirectory;
         this.domainTracker = {};
         this.scraperManager = {};
+        this.limiter = new Limiter_1.Limiter({ counterLoop: 1000, max: (config === null || config === void 0 ? void 0 : config.maxRequestPerSecond) || 10 }).start();
     }
     cleanExit() {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.limiter.stop();
             yield this.domainTracker.cleanExit();
             yield this.scraperManager.cleanExit();
             console.log("\x1b[37m\nProcess Completed");
@@ -98,27 +103,33 @@ class ProcessManager {
      * @param file file Object
      * @returns axios get request response
      */
-    getRemoteFile(remoteURL, file) {
+    getRemoteFile(file) {
         return __awaiter(this, void 0, void 0, function* () {
             this.metadata.httpRequest += 1;
-            const axiosResponse = yield axios_1.default
+            const remoteURL = file.remoteURL;
+            yield this.limiter.requestApproval("operation");
+            const axiosResponse = (yield axios_1.default
                 .get(remoteURL.href, {
                 transformResponse: (res) => {
                     return res;
                 },
                 headers: {
-                    // host: "canva.com",
                     connection: "keep-alive",
-                    "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36',
-                }
+                    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36",
+                },
             })
-                .catch((error) => null);
-            if (!axiosResponse) {
-                this.logFailedWrite(remoteURL, file, `Not Found`);
+                .catch((error) => error.response));
+            if (!(axiosResponse === null || axiosResponse === void 0 ? void 0 : axiosResponse.data)) {
+                this.logFailedWrite(file, `Not Found`);
             }
             return axiosResponse;
         });
     }
+    /**
+     * Increments the total number of fetched resources .
+     *
+     * @param increment degree of the incrimination
+     */
     incrementAllLink(increment) {
         this.metadata.allLink += increment;
         console.log(Logger_1.default.color(`Retrieved : `, "Reset"), Logger_1.default.color(`${increment} links `, "FgYellow"), `; ${this.metadata.allLink - increment} ==>`, Logger_1.default.color(this.metadata.allLink, "FgBlue"));
@@ -138,7 +149,7 @@ class ProcessManager {
                     if (err) {
                         console.error(err);
                     }
-                    console.log("Successful connection to sqlite database\n");
+                    console.log("\nConnected to database.... Ready to rock 🤘");
                     resolve();
                 });
             });
@@ -168,6 +179,22 @@ class ProcessManager {
                 this.incrementAllLink(links.length);
             return links;
         });
+    }
+    /**
+     * Utility function that create a scrapperFile instances that holds
+     * data related to the files.
+     *
+     * @param url remote url to file;
+     * @returns
+     */
+    createFile(url, rootDirectory) {
+        try {
+            return new ScrapperFile_1.ScrapperFile(url, rootDirectory || this.destDirectory);
+        }
+        catch (err) {
+            console.log(Logger_1.default.color("Invalid url, ", "FgRed"));
+            return null;
+        }
     }
 }
 exports.default = ProcessManager;

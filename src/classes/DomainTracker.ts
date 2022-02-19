@@ -3,7 +3,7 @@ import sqlite3 from "sqlite3";
 import getPathAndFileName from "../lib/getPathAndFileName";
 
 type domainRecord = {
-  domain: string;
+  hostname: string;
   directory: string;
 };
 export default class DomainTracker {
@@ -18,8 +18,8 @@ export default class DomainTracker {
 
   /**
    * Ensures that a domain has an associated set in the domain dictionary saved in Memory {this.domainInMemory}
-   * 
-   * @param hostname 
+   *
+   * @param hostname
    */
 
   ensureHostname(hostname: string) {
@@ -27,25 +27,24 @@ export default class DomainTracker {
       this.domainInMemory[hostname] = new Set();
   }
 
-  
   /**
    * Add a local path to list of path existing for a given host / domain.
-   * 
-   * @param hostname 
-   * @param path 
+   *
+   * @param hostname
+   * @param path
    */
   addPathToHost(hostname: string, path: string) {
     this.ensureHostname(hostname);
     this.domainInMemory[hostname].add(path);
   }
-  
+
   /**
    * Given an url and a localDirectory, it ensures that the hostname - localDirectory combination has been
    * saved. If not, it saves the combination.
-   * 
-   * @param url 
-   * @param localDirectory 
-   * @returns 
+   *
+   * @param url
+   * @param localDirectory
+   * @returns
    */
   lookAtFile(url: URL, localDirectory: string) {
     if (this.lookUp(url)) return;
@@ -95,7 +94,6 @@ export default class DomainTracker {
         VALUES ${newDomain};
         `,
         () => {
-
           resolve();
         }
       );
@@ -114,7 +112,7 @@ export default class DomainTracker {
             this.domainInMemory[hostname].add(directory)
           );
 
-          resolve(directories||[]);
+          resolve(directories || []);
         }
       );
     });
@@ -135,4 +133,16 @@ export default class DomainTracker {
     return directories.map((directory) => directory.split(hostname)[0]);
   }
 
+  getAllDomains(): Promise<string[]> {
+    
+    return new Promise((resolve ) => {
+      this.db.all(
+        `SELECT DISTINCT hostname FROM domainTracker;`,
+        (_, rows: domainRecord[]) => {
+
+          resolve( rows.map(row => row.hostname) || []);
+        }
+      );
+    })
+  }
 }

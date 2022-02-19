@@ -1,5 +1,13 @@
 import fs from "fs";
 
+/**
+ * This functions ensures that a <strong>Directory</strong> by verifying if it is present
+ * and creating it if he is not.
+ * 
+ * @param localPath path to check
+ * @param cb callback functions
+ * @returns 
+ */
 export const ensurePath: (
   localPath: string,
   cb?: (directoryExists: boolean) => any

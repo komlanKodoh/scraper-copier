@@ -1,6 +1,6 @@
 {
   "name": "scraper-copier",
-  "version": "1.0.11",
+  "version": "1.0.13",
   "description": "replicating server file structure on my computer",
   "main": "./dist/index.js",
   "scripts": {
@@ -18,7 +18,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.23.0",
+    "@types/request": "^2.48.8",
+    "axios": "^0.24.0",
     "cheerio": "^1.0.0-rc.10",
     "express": "^4.17.2",
     "mysql2": "^2.3.3",

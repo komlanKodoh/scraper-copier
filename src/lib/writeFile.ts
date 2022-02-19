@@ -1,7 +1,9 @@
 import path from "path";
 const fs = require("fs");
 import Logger from "../classes/Logger";
+import { ScrapperFile } from "../classes/ScrapperFile";
 import { insertIn } from "../utils";
+import { ensurePath } from "../utils/ensurePath";
 
 /**
  * Processes html before write to local path
@@ -9,9 +11,12 @@ import { insertIn } from "../utils";
  * @param data string content of html document
  * @returns processed html string
  */
-export function processHTML(HTML: string): string {
+export function processHTML(HTML: string, file: FileObject): string {
   const scriptToInject =
-    `<script src='/helpers/main.js'></script>`;
+    `<script src='/helpers/main.js'></script>
+     <script>
+        window.__current__domain__name = ${file.remoteURL.hostname};
+     </script>`;
 
   const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
 
@@ -33,11 +38,10 @@ export function processHTML(HTML: string): string {
  */
 const writeFile = async (
   data: string,
-  localDirectory: string,
-  file: FileObject,
+  file: ScrapperFile,
   callback: (error: CustomError | null) => void
 ) => {
-  const destination = path.join(localDirectory, file.name);
+  const destination = path.join(file.directory, file.name);
 
   if (typeof data === "object") {
     try {
@@ -49,7 +53,7 @@ const writeFile = async (
     }
   } else if (file.extension === "html") {
     try {
-      data = processHTML(data);
+      data = processHTML(data, file);
     } catch (err) {
       console.log(
         Logger.color(
@@ -62,6 +66,7 @@ const writeFile = async (
 
   await fs.writeFile(destination, data, (err: Error) => {
     if (err) {
+      console.log(err)
       callback({ message: `Unable to write file on path ${destination}` });
     } else {
       callback(null);

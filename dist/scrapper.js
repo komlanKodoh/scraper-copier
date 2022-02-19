@@ -24,9 +24,11 @@ const cloneRemoteUrls = (numberOfUrls, processManager) => __awaiter(void 0, void
     yield Promise.all(cloning);
     return true;
 });
-const start = (target_url, destDirectory) => __awaiter(void 0, void 0, void 0, function* () {
+const start = (target_url, destDirectory, maxRequestPerSecond = 5) => __awaiter(void 0, void 0, void 0, function* () {
     const dbPath = path_1.default.join(__dirname, ".default_scraper.db");
-    const processManager = yield new ProcessManager_1.default(destDirectory).init({
+    const processManager = yield new ProcessManager_1.default(destDirectory, {
+        maxRequestPerSecond: maxRequestPerSecond,
+    }).init({
         dbPath,
         scraperRootUrls: target_url,
     });
@@ -35,7 +37,9 @@ const start = (target_url, destDirectory) => __awaiter(void 0, void 0, void 0, f
         process.exit();
     }));
     while (true) {
-        const pursue = yield cloneRemoteUrls(10000, processManager);
+        // 250 was arbitrary chosen to signify the number of request to boot at the same time,
+        // the process manager internally takes care of scheduling the request to not overwhelm servers;
+        const pursue = yield cloneRemoteUrls(250, processManager);
         if (!pursue)
             break;
     }

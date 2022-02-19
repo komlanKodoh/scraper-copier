@@ -1,33 +1,23 @@
 window.addEventListener("click", (e: any) => {
+  if (!e.target.href) return;
+  // prevent routing if the element being clicked has a href prop.
 
-  const linksClicked = e.path.filter(
-    (element: HTMLElement) => element.nodeName === "A"
-  );
-  
-  if (linksClicked.length > 0) {
-    // e.stopImmediatePropagation();
+  e.preventDefault();
 
-    const currentURL = new URL(window.location.href);
-    let clickedLink;
+  const linkClicked = e.target;
 
-    for (const link of linksClicked) {
-      if (link.href) clickedLink = link;
-    }
-
-    
-    if (/^https*:\/\/localhost:[0-9]+/.test(clickedLink?.href || "")) {
-      console.log("same origin ", clickedLink.href)
-      window.location.href = clickedLink.href;
-      return;
-    }
-    e.preventDefault()
-    console.log("trying to run away ", clickedLink.href )
-
-    window.location.href = `${currentURL.origin}/?url=${clickedLink.href}&updateDomain=true`;
+  if (/^https*:\/\/localhost:[0-9]+/.test(linkClicked.href)) {
+    console.log("same origin ", linkClicked.href);
+    window.location.href = linkClicked.href;
+    return;
   }
+
+  window.location.href = `${window.location.origin}/?url=${linkClicked.href}&updateDomain=true`;
 });
 
 if ("serviceWorker" in navigator) {
+  // Register service worker to act as proxy between request and servers
+
   navigator.serviceWorker.register("/myWorker.js", { scope: "/" }).then(
     function (registration) {
       console.log("Service worker registration succeeded:");
@@ -36,6 +26,30 @@ if ("serviceWorker" in navigator) {
       console.log("Service worker registration failed:", error);
     }
   );
-} else {
-  console.log("Service workers are not supported.");
-}
+} else console.log("Service workers are not supported.");
+
+// overwrite of origin pushState to emit locationChange event;
+history.pushState = ((originPushState: History["pushState"]) =>
+  function pushState(this: History, ...arg: Parameters<History["pushState"]>) {
+    var ret = originPushState.apply(this, arg);
+    window.dispatchEvent(new Event("pushstate"));
+    window.dispatchEvent(new Event("locationChange"));
+    return ret;
+  })(history.pushState);
+
+// overwrite of origin replaceState to emit locationChange event;
+history.replaceState = ((originalReplaceState: History["replaceState"]) =>
+  function replaceState(
+    this: History,
+    ...arg: Parameters<History["replaceState"]>
+  ) {
+    var ret = originalReplaceState.apply(this, arg);
+    window.dispatchEvent(new Event("replacestate"));
+    window.dispatchEvent(new Event("locationChange"));
+    return ret;
+  })(history.replaceState);
+
+// overwrite of origin replaceState to emit locationChange event;
+window.addEventListener("popstate", () => {
+  window.dispatchEvent(new Event("locationChange"));
+});

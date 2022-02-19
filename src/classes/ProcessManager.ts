@@ -5,9 +5,11 @@ import { ensurePath } from "../utils/ensurePath";
 import ScraperManager from "./ScraperManager";
 import axios, { AxiosResponse } from "axios";
 import DomainTracker from "./DomainTracker";
+import { ScrapperFile } from "./ScrapperFile";
+import { Limiter } from "./Limiter";
 
 interface WriteLogger {
-  (remoteURL: URL, file: FileObject, message: string): void;
+  (file: ScrapperFile, message?: string): void;
 }
 
 export type processManagerMetadata = {
@@ -17,9 +19,15 @@ export type processManagerMetadata = {
   successfulWrite: number;
 };
 
+export type ProcessManagerConfig = {
+  maxRequestPerSecond?: number;
+};
+
 export default class ProcessManager {
+  limiter: Limiter;
   db: sqlite3.Database;
   destDirectory: string;
+  config: ProcessManagerConfig;
   domainTracker: DomainTracker;
   scraperManager: ScraperManager;
 
@@ -30,16 +38,20 @@ export default class ProcessManager {
     successfulWrite: 0,
   };
 
-  constructor(destDirectory: string) {
+  constructor(destDirectory: string, config?: ProcessManagerConfig) {
+    this.config = config || {};
     this.db = {} as sqlite3.Database;
     this.destDirectory = destDirectory;
     this.domainTracker = {} as DomainTracker;
     this.scraperManager = {} as ScraperManager;
+    this.limiter = new Limiter({ counterLoop: 1000, max: config?.maxRequestPerSecond || 10 }).start();
   }
 
   async cleanExit() {
+    await this.limiter.stop();
     await this.domainTracker.cleanExit();
     await this.scraperManager.cleanExit();
+
     console.log("\x1b[37m\nProcess Completed");
     console.log(
       `Total http request : ${Logger.color(
@@ -93,32 +105,39 @@ export default class ProcessManager {
    * @returns axios get request response
    */
 
-  async getRemoteFile(remoteURL: URL, file: FileObject) {
+  async getRemoteFile(file: ScrapperFile) {
     this.metadata.httpRequest += 1;
+    const remoteURL = file.remoteURL;
 
+    await this.limiter.requestApproval("operation");
 
-
+    
     const axiosResponse = (await axios
       .get(remoteURL.href, {
         transformResponse: (res) => {
           return res;
         },
         headers: {
-          // host: "canva.com",
           connection: "keep-alive",
-      
-          "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36',
-        }
-      })
-      .catch((error) => null) as AxiosResponse<string, any> | null );
 
-    if (!axiosResponse) {
-      this.logFailedWrite(remoteURL, file, `Not Found`);
+          "user-agent":
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36",
+        },
+      })
+      .catch((error) => error.response)) as AxiosResponse<string, any> | null;
+
+    if (!axiosResponse?.data) {
+      this.logFailedWrite(file, `Not Found`);
     }
 
     return axiosResponse;
   }
 
+  /**
+   * Increments the total number of fetched resources .
+   *
+   * @param increment degree of the incrimination
+   */
   incrementAllLink(increment: number) {
     this.metadata.allLink += increment;
 
@@ -138,12 +157,12 @@ export default class ProcessManager {
    * @param data Data string to be logged
    */
 
-  logFailedWrite: WriteLogger = (remoteURL, file, errorMessage) => {
+  logFailedWrite: WriteLogger = (file, errorMessage) => {
     this.metadata.failedWrite++;
     Logger.logFileProcess(
       file.extension,
-      remoteURL.href,
-      errorMessage,
+      file.remoteURL.href,
+      errorMessage || "",
       this.metadata,
       {
         main: ["FgWhite"],
@@ -161,12 +180,12 @@ export default class ProcessManager {
    *
    */
 
-  logSuccessfulWrite: WriteLogger = (remoteURL, file, localDirectory) => {
+  logSuccessfulWrite: WriteLogger = (file) => {
     this.metadata.successfulWrite++;
     Logger.logFileProcess(
       file.extension,
-      remoteURL.href,
-      path.join(localDirectory, file.name),
+      file.remoteURL.href,
+      path.join(file.directory, file.name),
       this.metadata,
       {
         main: ["FgWhite"],
@@ -174,7 +193,7 @@ export default class ProcessManager {
       }
     );
 
-    this.domainTracker.lookAtFile(remoteURL, localDirectory);
+    this.domainTracker.lookAtFile(file.remoteURL, file.directory);
   };
 
   /**
@@ -194,7 +213,7 @@ export default class ProcessManager {
         if (err) {
           console.error(err);
         }
-        console.log("Successful connection to sqlite database\n");
+        console.log("\nConnected to database.... Ready to rock 🤘");
         resolve();
       });
     });
@@ -225,5 +244,22 @@ export default class ProcessManager {
 
     if (links.length > 0) this.incrementAllLink(links.length);
     return links;
+  }
+
+  /**
+   * Utility function that create a scrapperFile instances that holds
+   * data related to the files.
+   *
+   * @param url remote url to file;
+   * @returns
+   */
+  createFile(url: string, rootDirectory?: string): ScrapperFile | null {
+    try {
+      return new ScrapperFile(url, rootDirectory || this.destDirectory);
+    } catch (err) {
+      console.log(Logger.color("Invalid url, ", "FgRed"));
+
+      return null;
+    }
   }
 }

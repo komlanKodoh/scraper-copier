@@ -23,8 +23,11 @@ const utils_1 = require("../utils");
  * @param data string content of html document
  * @returns processed html string
  */
-function processHTML(HTML) {
-    const scriptToInject = `<script src='/helpers/main.js'></script>`;
+function processHTML(HTML, file) {
+    const scriptToInject = `<script src='/helpers/main.js'></script>
+     <script>
+        window.__current__domain__name = ${file.remoteURL.hostname};
+     </script>`;
     const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
     if (!(matched === null || matched === void 0 ? void 0 : matched.index)) {
         throw new Error("Head is not found.");
@@ -40,8 +43,8 @@ exports.processHTML = processHTML;
  * @param localDirectory directory where to write the file
  * @param fileName name of the file to write
  */
-const writeFile = (data, localDirectory, file, callback) => __awaiter(void 0, void 0, void 0, function* () {
-    const destination = path_1.default.join(localDirectory, file.name);
+const writeFile = (data, file, callback) => __awaiter(void 0, void 0, void 0, function* () {
+    const destination = path_1.default.join(file.directory, file.name);
     if (typeof data === "object") {
         try {
             data = JSON.stringify(data);
@@ -54,7 +57,7 @@ const writeFile = (data, localDirectory, file, callback) => __awaiter(void 0, vo
     }
     else if (file.extension === "html") {
         try {
-            data = processHTML(data);
+            data = processHTML(data, file);
         }
         catch (err) {
             console.log(Logger_1.default.color("- File : Could not inject js " + destination + "\n", "FgRed"));
@@ -62,6 +65,7 @@ const writeFile = (data, localDirectory, file, callback) => __awaiter(void 0, vo
     }
     yield fs.writeFile(destination, data, (err) => {
         if (err) {
+            console.log(err);
             callback({ message: `Unable to write file on path ${destination}` });
         }
         else {

@@ -5,6 +5,10 @@ import getPathAndFileName from "../getPathAndFileName";
 const getPathAndFileNameTestFunction = (url: string, root?: string) => {
   return getPathAndFileName(new URL(url), root);
 };
+
+const getBase64 = (str: string) => {
+  return Buffer.from(str).toString('base64')
+} 
 describe("Obtain destination path and file name", () => {
   runTest(
     [
@@ -28,7 +32,7 @@ describe("Obtain destination path and file name", () => {
         input: ["https://cool.me/daniel?number=different"],
         expectedOutput: [
           "cool.me/daniel",
-          "index?number=different.html",
+          "index" + getBase64("?number=different") + ".html",
           "html",
         ],
       },
@@ -43,7 +47,7 @@ describe("Obtain destination path and file name", () => {
         input: ["https://test.com/daniel/root?person=randomized#home"],
         expectedOutput: [
           "test.com/daniel/root",
-          "index?person=randomized.html",
+          "index" + getBase64("?person=randomized") + ".html",
           "html",
         ],
       },
@@ -52,7 +56,7 @@ describe("Obtain destination path and file name", () => {
         input: ["https://test.com/daniel/root/?person=randomized#home"],
         expectedOutput: [
           "test.com/daniel/root",
-          "index?person=randomized.html",
+          "index" + getBase64("?person=randomized") + ".html",
           "html",
         ],
       },

@@ -5,6 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fileExists = exports.ensurePath = void 0;
 const fs_1 = __importDefault(require("fs"));
+/**
+ * This functions ensures that a <strong>Directory</strong> by verifying if it is present
+ * and creating it if he is not.
+ *
+ * @param localPath path to check
+ * @param cb callback functions
+ * @returns
+ */
 const ensurePath = (localPath, cb) => {
     return new Promise((resolve, reject) => {
         try {
