@@ -107,10 +107,9 @@ class DomainTracker {
     getAllDomains() {
         return new Promise((resolve) => {
             this.db.all(`SELECT DISTINCT hostname FROM domainTracker;`, (_, rows) => {
-                resolve(rows.map(row => row.hostname) || []);
+                resolve((rows === null || rows === void 0 ? void 0 : rows.map(row => row.hostname)) || []);
             });
         });
     }
 }
 exports.default = DomainTracker;
-//# sourceMappingURL=DomainTracker.js.map

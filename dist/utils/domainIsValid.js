@@ -38,4 +38,3 @@ const domainIsValid = (domainTracker, domain) => __awaiter(void 0, void 0, void 
     return true;
 });
 exports.domainIsValid = domainIsValid;
-//# sourceMappingURL=domainIsValid.js.map

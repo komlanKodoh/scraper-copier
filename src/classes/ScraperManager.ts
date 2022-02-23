@@ -7,11 +7,13 @@ const path = require("path");
 
 export default class ScraperManager {
   name: string;
+  tableName: string;
   db: sqlite3.Database;
 
-  constructor(db: sqlite3.Database) {
+  constructor(db: sqlite3.Database, tableName: string = "link") {
     this.db = db;
     this.name = "sqlite";
+    this.tableName = tableName;
   }
 
   cleanExit() {}
@@ -34,7 +36,7 @@ export default class ScraperManager {
 
       this.db.run(
         `
-                INSERT INTO link (link, popularity)
+                INSERT INTO  "${this.tableName}" (link, popularity)
                 VALUES ${createInsertValues(links)}
                 ON CONFLICT(link) DO UPDATE SET popularity = popularity + 1;
                 `,
@@ -58,7 +60,7 @@ export default class ScraperManager {
     return new Promise<void>((resolve, reject) => {
       this.db.run(
         `
-              DELETE FROM link WHERE link="${link}";
+              DELETE FROM  "${this.tableName}" WHERE link="${link}";
               `,
         () => {
           resolve();
@@ -76,7 +78,7 @@ export default class ScraperManager {
   public findNext = (limit?: number) => {
     let query = `
     SELECT  *
-    FROM link 
+    FROM  "${this.tableName}" 
     WHERE seen = 0
     ORDER BY popularity DESC
     `;
@@ -87,7 +89,7 @@ export default class ScraperManager {
       this.db.all(
         `
               SELECT  *
-              FROM link 
+              FROM  "${this.tableName}" 
               WHERE seen = 0
               ORDER BY popularity DESC
               LIMIT ${limit}
@@ -110,19 +112,26 @@ export default class ScraperManager {
    * @returns A promise;
    */
 
-  public init = async (links: string[]) => {
+  public init = async (links: string[], reset = false) => {
     // creation of a table
+
     await new Promise<void>((resolve, reject) => {
       this.db.run(
-        sql`CREATE TABLE IF NOT EXISTS link ( link VARCHAR(200) UNIQUE, popularity INT, seen boolean DEFAULT 0)`,
-        () => resolve()
+        `CREATE TABLE IF NOT EXISTS "${this.tableName}" ( link VARCHAR(200) UNIQUE, popularity INT, seen boolean DEFAULT 0)`,
+        (error) => {
+          if (error) throw error;
+
+          resolve();
+        }
       );
     });
 
     // emptying the table
-    await new Promise<void>((resolve) => {
-      this.db.run(sql`DELETE from link`, () => resolve());
-    });
+    if (reset)
+      await new Promise<void>((resolve) => {
+        this.db.run(`DELETE from "${this.tableName}"`, () => resolve());
+      });
+
     // adding default link to table before booting the process
     await new Promise<void>((resolve, reject) => {
       let values = "";
@@ -136,7 +145,7 @@ export default class ScraperManager {
 
       this.db.run(
         `
-          INSERT INTO link (link, popularity)
+          INSERT INTO  "${this.tableName}" (link, popularity)
           VALUES ${values}
           ON CONFLICT(link) DO UPDATE SET popularity = popularity + 1;
         `,
@@ -158,7 +167,7 @@ export default class ScraperManager {
     return new Promise<void>((resolve, reject) => {
       this.db.run(
         `
-            UPDATE link
+            UPDATE  "${this.tableName}"
             SET seen = 1
             WHERE link = "${link}";
           `,
@@ -168,4 +177,22 @@ export default class ScraperManager {
       );
     });
   };
+
+  find(link: string) {
+    return new Promise<link|null>((resolve, reject) => {
+      this.db.all(
+        `
+            SELECT * FROM  "${this.tableName}"
+            WHERE link = "${link}";
+          `,
+        (_, rows: link[]) => {
+          if (!rows) {
+            return resolve(null);
+          }
+
+          resolve(rows[0]);
+        }
+      );
+    });
+  }
 }

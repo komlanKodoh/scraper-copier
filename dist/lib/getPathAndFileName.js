@@ -36,18 +36,17 @@ const getPathAndFileName = (url, root) => {
     // get index for the where the first dot from the left is met
     let extensionIndex = (0, utils_1.firstEncounter)(urlFileName, ".", "r") || urlFileName.length;
     let fileName_noFileExtension = urlFileName.slice(0, extensionIndex);
-    let fileExtension = urlFileName.slice(extensionIndex + 1);
+    let fileExtension = urlFileName.slice(extensionIndex);
     let directory = path.dirname(fullPath);
     if (!fileExtension) {
         directory = path.join(directory, fileName_noFileExtension);
         fileName_noFileExtension = "index";
-        fileExtension = "html";
+        fileExtension = ".html";
     }
     return [
         path.join(root || "", directory),
-        fileName_noFileExtension + Buffer.from(url.search).toString('base64') + "." + fileExtension,
+        fileName_noFileExtension + encodeURIComponent(url.search),
         fileExtension,
     ];
 };
 exports.default = getPathAndFileName;
-//# sourceMappingURL=getPathAndFileName.js.map

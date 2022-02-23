@@ -53,7 +53,7 @@ class ProcessManager {
          */
         this.logSuccessfulWrite = (file) => {
             this.metadata.successfulWrite++;
-            Logger_1.default.logFileProcess(file.extension, file.remoteURL.href, path_1.default.join(file.directory, file.name), this.metadata, {
+            Logger_1.default.logFileProcess(file.extension, file.remoteURL.href, path_1.default.join(file.directory, file.name + file.extension), this.metadata, {
                 main: ["FgWhite"],
                 info: ["FgGreen"],
             });
@@ -92,7 +92,7 @@ class ProcessManager {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.initDb(config.dbPath);
             yield this.initDomainTracker();
-            yield this.initScraperManager(config.scraperRootUrls);
+            yield this.initScraperManager(config.scraperRootUrls, config.resetLink);
             return this;
         });
     }
@@ -108,6 +108,7 @@ class ProcessManager {
             this.metadata.httpRequest += 1;
             const remoteURL = file.remoteURL;
             yield this.limiter.requestApproval("operation");
+            // console.log("Getting url", file.remoteURL.href)
             const axiosResponse = (yield axios_1.default
                 .get(remoteURL.href, {
                 transformResponse: (res) => {
@@ -119,6 +120,7 @@ class ProcessManager {
                 },
             })
                 .catch((error) => error.response));
+            // console.log(Logger.color("Getting url " +  file.remoteURL.href, "FgBlue"))
             if (!(axiosResponse === null || axiosResponse === void 0 ? void 0 : axiosResponse.data)) {
                 this.logFailedWrite(file, `Not Found`);
             }
@@ -144,10 +146,12 @@ class ProcessManager {
         return __awaiter(this, void 0, void 0, function* () {
             if (!(yield (0, ensurePath_1.ensurePath)(path_1.default.dirname(dbPath))))
                 console.log(Logger_1.default.color(`Could not create directory at path ${dbPath}`, "FgRed"));
-            yield new Promise((resolve) => {
+            yield new Promise((resolve, reject) => {
                 this.db = new sqlite3_1.default.Database(dbPath, (err) => {
                     if (err) {
                         console.error(err);
+                        reject(err);
+                        return;
                     }
                     console.log("\nConnected to database.... Ready to rock 🤘");
                     resolve();
@@ -164,14 +168,20 @@ class ProcessManager {
             return this.domainTracker;
         });
     }
-    initScraperManager(rootLinks) {
+    initScraperManager(rootLinks, reset = false) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.db)
                 throw new Error("initDb must be called before scraper initScraperManager");
-            this.scraperManager = yield new ScraperManager_1.default(this.db).init(rootLinks);
+            this.scraperManager = yield new ScraperManager_1.default(this.db, Buffer.from(this.destDirectory).toString('base64')).init(rootLinks, reset);
             return this.scraperManager;
         });
     }
+    /**
+     * Returns a specified number of non scrapped links from the active database;
+     *
+     * @param limit
+     * @returns
+     */
     findNext(limit) {
         return __awaiter(this, void 0, void 0, function* () {
             const links = yield this.scraperManager.findNext(limit);
@@ -198,4 +208,3 @@ class ProcessManager {
     }
 }
 exports.default = ProcessManager;
-//# sourceMappingURL=ProcessManager.js.map

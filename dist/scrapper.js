@@ -15,22 +15,32 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cloneFile_1 = __importDefault(require("./lib/cloneFile"));
 const path_1 = __importDefault(require("path"));
 const ProcessManager_1 = __importDefault(require("./classes/ProcessManager"));
+const ensurePath_1 = require("./utils/ensurePath");
 var axios_request = { current: 0 };
+/**
+ * Clone a specific number of unseen files to local directories.
+ *
+ * @param numberOfUrls Number of unseen url to clone to local dir
+ * @param processManager A instance of the process manager class,
+ * @returns True if it found file to load and false if there were no more file to load.
+ */
 const cloneRemoteUrls = (numberOfUrls, processManager) => __awaiter(void 0, void 0, void 0, function* () {
     const nexts = yield processManager.findNext(numberOfUrls);
     if (nexts.length === 0)
         return false;
-    const cloning = nexts.map(({ link, popularity }) => __awaiter(void 0, void 0, void 0, function* () { return yield (0, cloneFile_1.default)(link, processManager); }));
-    yield Promise.all(cloning);
+    const cloningPromises = nexts.map(({ link, popularity }) => __awaiter(void 0, void 0, void 0, function* () { return yield (0, cloneFile_1.default)(link, processManager); }));
+    yield Promise.all(cloningPromises);
     return true;
 });
-const start = (target_url, destDirectory, maxRequestPerSecond = 5) => __awaiter(void 0, void 0, void 0, function* () {
-    const dbPath = path_1.default.join(__dirname, ".default_scraper.db");
+const start = (startingURls, destDirectory, maxRequestPerSecond = 5, dataBasePath, resetLink) => __awaiter(void 0, void 0, void 0, function* () {
+    const dbPath = dataBasePath || path_1.default.join(__dirname, ".default_scraper.db");
+    yield (0, ensurePath_1.ensurePath)(path_1.default.dirname(dbPath));
     const processManager = yield new ProcessManager_1.default(destDirectory, {
-        maxRequestPerSecond: maxRequestPerSecond,
+        maxRequestPerSecond,
     }).init({
         dbPath,
-        scraperRootUrls: target_url,
+        scraperRootUrls: startingURls,
+        resetLink
     });
     process.on("SIGINT", () => __awaiter(void 0, void 0, void 0, function* () {
         yield processManager.cleanExit();
@@ -47,4 +57,3 @@ const start = (target_url, destDirectory, maxRequestPerSecond = 5) => __awaiter(
     return;
 });
 exports.default = { start };
-//# sourceMappingURL=scrapper.js.map

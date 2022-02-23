@@ -17,6 +17,7 @@ const cli_args = yargs_1.default
     })
         .option("database", {
         alias: "d",
+        type: "string",
         description: "choose the database to start the process from",
     })
         .option("roots", {
@@ -24,15 +25,15 @@ const cli_args = yargs_1.default
         type: "string",
         description: "supplemental root element to start the process from",
     })
-        .option("authorize-domain", {
-        alias: "d",
-        type: "array",
-        description: "a list of authorized domain that the scrapper can extends to",
-    })
         .option("max-request-per-second", {
         alias: "m",
         type: "number",
         description: "",
+    })
+        .option("keep-history", {
+        alias: "h",
+        type: "boolean",
+        description: "tells the scrapper if you want to continue using the previous urls.",
     });
 })
     .command("serve <domain>", "Serve the cloned website in local machine", (yargs) => {
@@ -52,6 +53,11 @@ const cli_args = yargs_1.default
         type: "boolean",
         default: true,
         description: "Fetches a requested resource if it has not been fetched yet. ",
+    })
+        .option("reset-history", {
+        alias: "r",
+        type: "boolean",
+        description: "reset the history of previously scrapped link",
     });
 })
     .command("domain", "Interact with scraper cached data", (yargs) => {
@@ -79,7 +85,11 @@ const cli_args = yargs_1.default
     description: "reduce logging to essential information (under developments )",
     type: "boolean",
 })
+    .option("authorized-domain", {
+    alias: "d",
+    type: "array",
+    description: "a list of authorized domain that the scrapper can extends to",
+})
     .help()
     .alias("help", "h").argv;
 exports.default = cli_args;
-//# sourceMappingURL=cli_args.js.map

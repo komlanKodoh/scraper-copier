@@ -5,12 +5,9 @@
   "main": "./dist/index.js",
   "scripts": {
     "test": "jest",
-    "dev": "ts-node ./src/index.ts load -u https://komlankodoh.com -d ./ROOT_MASTER",
-    "init": "sudo docker build -t server_mysql .",
-    "start": "ts-node src/index.ts",
-    "demo:load": "tsc && node ./dist/index.js load https://komlankodoh.com ./dest -d mongodb",
-    "serve": "node ./dist/index.js serve ./dest/jonny.me",
-    "build": "tsc && chmod +x ./dist/index.js"
+    "serve": "node ./dist/index.js serve komlankodoh.com",
+    "load": "tsc && node ./dist/index.js load https://komlankodoh.com ./dest",
+    "build": "tsc && chmod +x ./dist/index.js && pkg . --out-path dist/executable "
   },
   "bin": {
     "scraper-copier": "dist/index.js"
@@ -23,6 +20,7 @@
     "cheerio": "^1.0.0-rc.10",
     "express": "^4.17.2",
     "mysql2": "^2.3.3",
+    "pkg": "^5.5.2",
     "sqlite3": "^5.0.2",
     "yargs": "^17.3.1"
   },

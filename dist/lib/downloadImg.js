@@ -37,4 +37,3 @@ const downloadImg = function (uri, localDirectory, file, callback) {
     }));
 };
 exports.default = downloadImg;
-//# sourceMappingURL=downloadImg.js.map

@@ -12,9 +12,9 @@ import getPathAndFileName from "./getPathAndFileName";
  * @returns 
  */
 export async function findFile(rootDirectories: string[], url: string) {
-  const [fileDirectory, fileName] = getPathAndFileName(new URL(url));
+  const [fileDirectory, fileName, fileExtension] = getPathAndFileName(new URL(url));
 
-  const rawFilePath = path.join(fileDirectory, fileName);
+  const rawFilePath = path.join(fileDirectory, fileName + fileExtension);
 
   for (let i = 0; i < rootDirectories.length; i++) {
     const destDirectory = rootDirectories[i];

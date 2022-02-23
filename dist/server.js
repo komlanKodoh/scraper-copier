@@ -32,9 +32,12 @@ exports.config = {
 function proxy(url, res) {
     // return console.log("I crashed in here")
     (0, request_1.default)(url, undefined, (error, response, body) => {
-        if ((error.code = "EAI_AGAIN")) {
-            console.log(Logger_1.default.color("Failed to retrieve and send the data, Check your internet connection", "FgRed"));
+        if (!error)
+            return;
+        if (error.code === "EAI_AGAIN") {
+            console.log(Logger_1.default.color(`Failed to proxy the request to ${url} Check your internet connection`, "FgRed"));
         }
+        res.sendStatus(404);
     }).pipe(res);
     console.log("File successfully forwarded to " +
         Logger_1.default.color("External servers  < -- >  ", "FgCyan") +
@@ -49,7 +52,7 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
     // local Directories is also used to saved link after scrapping remoteURLs;
     const dbPath = path_1.default.join(__dirname, ".default_scraper.db");
     yield processManager.initDb(dbPath);
-    yield processManager.initScraperManager([]);
+    yield processManager.initScraperManager([], false);
     const domainTracker = yield processManager.initDomainTracker();
     if (!(yield (0, domainIsValid_1.domainIsValid)(domainTracker, exports.config.activeDomain)))
         return;
@@ -66,7 +69,9 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
             originalRequest = JSON.parse(requestTargetURL);
         }
         catch (err) {
-            return console.log(Logger_1.default.color(`Failed to parse the requested resources:`, "FgRed"), Logger_1.default.color(`${req.url.slice(50)}`, "FgGreen"));
+            return console.log(Logger_1.default.color(`Failed to parse the requested resources:`, "FgRed")
+            // Logger.color(`${req.url.slice(50)}`, "FgGreen")
+            );
         }
         originalRequest.headers = req.headers;
         if (!(originalRequest === null || originalRequest === void 0 ? void 0 : originalRequest.url))
@@ -77,7 +82,8 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
                 error: "INVALID_URL",
                 message: `url ${req.url} is not valid`,
             });
-        let domainShouldBeCached = exports.config.activeDomain === file.remoteURL.hostname;
+        let domainShouldBeCached = exports.config.activeDomain === file.remoteURL.hostname ||
+            apiConfig.domainOfInterest.some((domainRegex) => domainRegex.test(file === null || file === void 0 ? void 0 : file.remoteURL.hostname));
         if (!domainShouldBeCached)
             return proxy(originalRequest.url, res);
         else {
@@ -85,6 +91,7 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
             // We first find the corresponding file from the local machine, if the
             // file is found we send it as the response;
             const fileSavedInStorage = yield (0, findFile_1.findFile)(directories, file.remoteURL.href);
+            console.log(fileSavedInStorage);
             if (fileSavedInStorage) {
                 console.log("File successfully served From  " +
                     Logger_1.default.color("LocalStorage      < -- >  ", "FgBlue") +
@@ -127,4 +134,3 @@ const ServerAPI = {
     start: startServer,
 };
 exports.default = ServerAPI;
-//# sourceMappingURL=server.js.map

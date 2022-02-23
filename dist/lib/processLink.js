@@ -42,4 +42,3 @@ const functionalProcessLink = (link, remoteUrlOrigin, authorize = [/./]) => {
 };
 exports.functionalProcessLink = functionalProcessLink;
 exports.default = processLink;
-//# sourceMappingURL=processLink.js.map

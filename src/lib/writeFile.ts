@@ -15,7 +15,7 @@ export function processHTML(HTML: string, file: FileObject): string {
   const scriptToInject =
     `<script src='/helpers/main.js'></script>
      <script>
-        window.__current__domain__name = ${file.remoteURL.hostname};
+        window.__current__domain__name = "${file.remoteURL.hostname}";
      </script>`;
 
   const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
@@ -41,7 +41,8 @@ const writeFile = async (
   file: ScrapperFile,
   callback: (error: CustomError | null) => void
 ) => {
-  const destination = path.join(file.directory, file.name);
+  
+  const destination = path.join(file.directory, file.name + file.extension);
 
   if (typeof data === "object") {
     try {

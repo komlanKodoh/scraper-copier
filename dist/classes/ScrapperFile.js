@@ -15,4 +15,3 @@ class ScrapperFile {
     }
 }
 exports.ScrapperFile = ScrapperFile;
-//# sourceMappingURL=ScrapperFile.js.map

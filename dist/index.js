@@ -30,13 +30,19 @@ switch (cli_args_1.default._[0]) {
         (0, index_1.setGlobal)("_authorized_domain", emptyArray
             .concat(cli_args_1.default["authorized-domain"] || [], startingUrls.map((url) => new URL(url).hostname))
             .map((domain) => new RegExp(domain, "i")));
-        scrapper_1.default.start(startingUrls, path_1.default.join(process.cwd(), cli_args_1.default.dest || ""), parseInt(cli_args_1.default["max-request-per-second"]));
+        const dataBasePath = cli_args_1.default.database ? path_1.default.join(process.cwd(), cli_args_1.default.database[0] || "") : undefined;
+        scrapper_1.default.start(startingUrls, path_1.default.join(process.cwd(), cli_args_1.default.dest || ""), parseInt(cli_args_1.default["max-request-per-second"]), dataBasePath, cli_args_1.default["reset-history"]);
         break;
     case "serve":
+        const _emptyArray = [];
+        const domainOfInterest = _emptyArray
+            .concat(cli_args_1.default["authorized-domain"] || [])
+            .map((domain) => new RegExp(domain, "i"));
         server_1.default.start({
             port: parseInt(cli_args_1.default.port),
             activeDomain: cli_args_1.default["domain"],
             activeCaching: cli_args_1.default["active-caching"],
+            domainOfInterest: domainOfInterest
         });
         break;
     case "domain":
@@ -45,4 +51,3 @@ switch (cli_args_1.default._[0]) {
     default:
         console.log("\nWelcome to scraper-copier, type ", Logger_1.default.color("--help ", "FgYellow"), " to get a list of available command :).\n");
 }
-//# sourceMappingURL=index.js.map

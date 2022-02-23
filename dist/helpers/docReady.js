@@ -75,4 +75,3 @@ Object.defineProperty(exports, "__esModule", { value: true });
     };
 })("docReady", window);
 exports.default = {};
-//# sourceMappingURL=docReady.js.map

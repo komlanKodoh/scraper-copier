@@ -89,11 +89,11 @@ export default class ProcessManager {
    * @returns process manager object
    */
 
-  async init(config: { dbPath: string; scraperRootUrls: string[] }) {
+  async init(config: { dbPath: string; scraperRootUrls: string[], resetLink?: boolean }) {
     await this.initDb(config.dbPath);
 
     await this.initDomainTracker();
-    await this.initScraperManager(config.scraperRootUrls);
+    await this.initScraperManager(config.scraperRootUrls,config.resetLink);
     return this;
   }
 
@@ -111,7 +111,7 @@ export default class ProcessManager {
 
     await this.limiter.requestApproval("operation");
 
-    
+    // console.log("Getting url", file.remoteURL.href)
     const axiosResponse = (await axios
       .get(remoteURL.href, {
         transformResponse: (res) => {
@@ -125,6 +125,8 @@ export default class ProcessManager {
         },
       })
       .catch((error) => error.response)) as AxiosResponse<string, any> | null;
+
+      // console.log(Logger.color("Getting url " +  file.remoteURL.href, "FgBlue"))
 
     if (!axiosResponse?.data) {
       this.logFailedWrite(file, `Not Found`);
@@ -182,10 +184,11 @@ export default class ProcessManager {
 
   logSuccessfulWrite: WriteLogger = (file) => {
     this.metadata.successfulWrite++;
+
     Logger.logFileProcess(
       file.extension,
       file.remoteURL.href,
-      path.join(file.directory, file.name),
+      path.join(file.directory, file.name + file.extension),
       this.metadata,
       {
         main: ["FgWhite"],
@@ -208,10 +211,12 @@ export default class ProcessManager {
         Logger.color(`Could not create directory at path ${dbPath}`, "FgRed")
       );
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       this.db = new sqlite3.Database(dbPath, (err) => {
         if (err) {
           console.error(err);
+          reject(err);
+          return;
         }
         console.log("\nConnected to database.... Ready to rock 🤘");
         resolve();
@@ -226,19 +231,26 @@ export default class ProcessManager {
       throw new Error(
         "initDb must be called before scraper initScraperManager"
       );
+
     this.domainTracker = await new DomainTracker(this.db).init();
     return this.domainTracker;
   }
 
-  async initScraperManager(rootLinks: string[]) {
+  async initScraperManager(rootLinks: string[], reset = false) {
     if (!this.db)
       throw new Error(
         "initDb must be called before scraper initScraperManager"
       );
-    this.scraperManager = await new ScraperManager(this.db).init(rootLinks);
+    this.scraperManager = await new ScraperManager(this.db,  Buffer.from(this.destDirectory).toString('base64')).init(rootLinks, reset);
     return this.scraperManager;
   }
 
+  /**
+   * Returns a specified number of non scrapped links from the active database;
+   * 
+   * @param limit 
+   * @returns 
+   */
   async findNext(limit?: number) {
     const links = await this.scraperManager.findNext(limit);
 

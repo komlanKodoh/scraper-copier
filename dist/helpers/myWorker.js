@@ -12,7 +12,6 @@ self.addEventListener("install", () => {
     console.log("I am the service worker, just here to say that I have been successfully installed");
 });
 self.addEventListener("fetch", function (event) {
-    console.log(event.request.path);
     const handler = () => __awaiter(this, void 0, void 0, function* () {
         const request = event.request;
         const requestData = {
@@ -30,10 +29,9 @@ self.addEventListener("fetch", function (event) {
         // to the discretion of proxy serve which has more Resources and is already processes more
         // more resources thus allowing it to take better routing decisions.
         const proxyURL = `/proxy?request=${btoa(JSON.stringify(requestData))}`;
-        console.log(proxyURL);
+        console.log(request.headers);
         const response = yield fetch(proxyURL);
         return response;
     });
     event.respondWith(handler());
 });
-//# sourceMappingURL=myWorker.js.map

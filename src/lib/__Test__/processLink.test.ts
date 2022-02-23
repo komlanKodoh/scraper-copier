@@ -63,7 +63,7 @@ describe("ProcessLink test", () => {
         input: [
           "https://www.somedomain.com/daniel",
           new URL("https://test.com/info"),
-          [/www.someDifferentDomain.com/],
+          [/www\.someDifferentDomain\.com/],
         ],
         expectedOutput: [],
       },

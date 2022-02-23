@@ -23,7 +23,10 @@ const actionDict = {
     }),
 };
 const domainHandler = (cli_args) => __awaiter(void 0, void 0, void 0, function* () {
-    const db = yield (0, createSqliteDb_1.default)(cli_args.directory || path_1.default.join(__dirname, ".default_scraper.db"), () => 0);
+    const dbPath = cli_args.database
+        ? path_1.default.join(process.cwd(), cli_args.database)
+        : path_1.default.join(__dirname, ".default_scraper.db");
+    const db = yield (0, createSqliteDb_1.default)(dbPath, () => null);
     if (!db)
         return console.log(Logger_1.default.color("could not connect to the database. ", "FgRed"));
     const domainTracker = new DomainTracker_1.default(db);
@@ -33,4 +36,3 @@ const domainHandler = (cli_args) => __awaiter(void 0, void 0, void 0, function* 
     actionDict[command](domainTracker);
 });
 exports.default = domainHandler;
-//# sourceMappingURL=handleDomainInteraction.js.map

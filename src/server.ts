@@ -21,14 +21,18 @@ export const config = {
 function proxy(url: string, res: any) {
   // return console.log("I crashed in here")
   request(url, undefined, (error, response, body) => {
-    if ((error.code = "EAI_AGAIN")) {
+    if (!error) return;
+
+    if (error.code === "EAI_AGAIN") {
       console.log(
         Logger.color(
-          "Failed to retrieve and send the data, Check your internet connection",
+          `Failed to proxy the request to ${url} Check your internet connection`,
           "FgRed"
         )
       );
     }
+
+    res.sendStatus(404);
   }).pipe(res);
   console.log(
     "File successfully forwarded to " +
@@ -41,6 +45,7 @@ const startServer = async (apiConfig: {
   port: number;
   activeDomain: string;
   activeCaching: boolean;
+  domainOfInterest: RegExp[];
 }) => {
   // loading configs to the local config object
   Object.assign(config, apiConfig);
@@ -53,7 +58,7 @@ const startServer = async (apiConfig: {
   const dbPath = path.join(__dirname, ".default_scraper.db");
 
   await processManager.initDb(dbPath);
-  await processManager.initScraperManager([]);
+  await processManager.initScraperManager([], false);
   const domainTracker = await processManager.initDomainTracker();
 
   if (!(await domainIsValid(domainTracker, config.activeDomain))) return;
@@ -78,8 +83,8 @@ const startServer = async (apiConfig: {
       originalRequest = JSON.parse(requestTargetURL);
     } catch (err) {
       return console.log(
-        Logger.color(`Failed to parse the requested resources:`, "FgRed"),
-        Logger.color(`${req.url.slice(50)}`, "FgGreen")
+        Logger.color(`Failed to parse the requested resources:`, "FgRed")
+        // Logger.color(`${req.url.slice(50)}`, "FgGreen")
       );
     }
 
@@ -95,13 +100,18 @@ const startServer = async (apiConfig: {
       ""
     );
 
+
     if (!file)
       return res.status(404).send({
         error: "INVALID_URL",
         message: `url ${req.url} is not valid`,
       });
 
-    let domainShouldBeCached = config.activeDomain === file.remoteURL.hostname;
+    let domainShouldBeCached =
+      config.activeDomain === file.remoteURL.hostname ||
+      apiConfig.domainOfInterest.some((domainRegex) =>
+        domainRegex.test(file?.remoteURL.hostname as string)
+      );
 
     if (!domainShouldBeCached) return proxy(originalRequest.url, res);
     else {
@@ -115,6 +125,8 @@ const startServer = async (apiConfig: {
         directories,
         file.remoteURL.href
       );
+
+      console.log(fileSavedInStorage);
 
       if (fileSavedInStorage) {
         console.log(

@@ -1,4 +1,7 @@
+import { ensurePath } from './ensurePath';
 import sqlite3 from "sqlite3";
+import path from 'path';
+import Logger from '../classes/Logger';
 
 /**
  * Creates a sqlite database on the given path
@@ -9,6 +12,11 @@ import sqlite3 from "sqlite3";
  */
 const createSqliteDb = async (dbPath: string, cb?: (err: Error | null) => void) => {
   let db : sqlite3.Database | null = null ;
+
+  if (!(await ensurePath(path.dirname(dbPath))))
+  console.log(
+    Logger.color(`Could not create directory at path ${dbPath}`, "FgRed")
+  );
 
   await new Promise<void>((resolve) => {
     db = new sqlite3.Database(dbPath, (err) => {

@@ -26,8 +26,8 @@ const getPathAndFileName_1 = __importDefault(require("./getPathAndFileName"));
  */
 function findFile(rootDirectories, url) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [fileDirectory, fileName] = (0, getPathAndFileName_1.default)(new URL(url));
-        const rawFilePath = path_1.default.join(fileDirectory, fileName);
+        const [fileDirectory, fileName, fileExtension] = (0, getPathAndFileName_1.default)(new URL(url));
+        const rawFilePath = path_1.default.join(fileDirectory, fileName + fileExtension);
         for (let i = 0; i < rootDirectories.length; i++) {
             const destDirectory = rootDirectories[i];
             const filePath = path_1.default.join(destDirectory, rawFilePath);
@@ -48,4 +48,3 @@ function findFile(rootDirectories, url) {
     });
 }
 exports.findFile = findFile;
-//# sourceMappingURL=findFile.js.map

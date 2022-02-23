@@ -39,18 +39,32 @@ switch (cli_args._[0]) {
         .map((domain) => new RegExp(domain, "i")) as RegExp[]
     );
 
+    const dataBasePath = cli_args.database ? path.join(process.cwd(), cli_args.database[0] || "") : undefined
+
     scrapper.start(
       startingUrls,
       path.join(process.cwd(), cli_args.dest || ""),
-      parseInt(cli_args["max-request-per-second"])
+      parseInt(cli_args["max-request-per-second"]),
+      dataBasePath,
+      cli_args["reset-history"]
     );
     break;
 
   case "serve":
+
+    const _emptyArray: string[] = [];
+
+    const domainOfInterest = _emptyArray
+    .concat(
+      cli_args["authorized-domain"] || []
+    )
+    .map( (domain) => new RegExp(domain, "i")) as RegExp[] ;
+
     server.start({
       port: parseInt(cli_args.port),
       activeDomain: cli_args["domain"],
       activeCaching: cli_args["active-caching"],
+      domainOfInterest: domainOfInterest
     });
     break;
 

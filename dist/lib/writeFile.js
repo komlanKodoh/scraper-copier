@@ -26,7 +26,7 @@ const utils_1 = require("../utils");
 function processHTML(HTML, file) {
     const scriptToInject = `<script src='/helpers/main.js'></script>
      <script>
-        window.__current__domain__name = ${file.remoteURL.hostname};
+        window.__current__domain__name = "${file.remoteURL.hostname}";
      </script>`;
     const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
     if (!(matched === null || matched === void 0 ? void 0 : matched.index)) {
@@ -44,7 +44,7 @@ exports.processHTML = processHTML;
  * @param fileName name of the file to write
  */
 const writeFile = (data, file, callback) => __awaiter(void 0, void 0, void 0, function* () {
-    const destination = path_1.default.join(file.directory, file.name);
+    const destination = path_1.default.join(file.directory, file.name + file.extension);
     if (typeof data === "object") {
         try {
             data = JSON.stringify(data);
@@ -74,4 +74,3 @@ const writeFile = (data, file, callback) => __awaiter(void 0, void 0, void 0, fu
     });
 });
 exports.default = writeFile;
-//# sourceMappingURL=writeFile.js.map

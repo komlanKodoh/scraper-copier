@@ -140,7 +140,7 @@ export default class DomainTracker {
         `SELECT DISTINCT hostname FROM domainTracker;`,
         (_, rows: domainRecord[]) => {
 
-          resolve( rows.map(row => row.hostname) || []);
+          resolve( rows?.map(row => row.hostname) || []);
         }
       );
     })

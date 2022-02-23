@@ -6,7 +6,7 @@ import processLink from "./processLink";
 import { ensurePath } from "../utils/ensurePath";
 import ProcessManager from "../classes/ProcessManager";
 import getPathAndFileName from "./getPathAndFileName";
-import { contentTypeToFileExtension } from "./contentTypeToFileExtension";
+import  contentTypeToFileExtension  from "./contentTypeToFileExtension";
 
 const cheerio = require("cheerio");
 
@@ -46,12 +46,12 @@ const cloneFile = async (
     const fileContentType = response.headers["content-type"];
 
     const realFileExtension = contentTypeToFileExtension(fileContentType);
-    if (realFileExtension) file.extension = realFileExtension;
+    // if (realFileExtension) file.extension = realFileExtension;
 
-    if (["png", "jpg", "jpeg", "gif", "svg"].includes(file.extension)) {
+    if ([".png", ".jpg", ".jpeg", ".gif", ".svg"].includes(file.extension)) {
       await downloadImg(
         url,
-        path.join(file.directory, file.name),
+        path.join(file.directory, file.name + file.extension),
         file,
         (error) => {
           if (error) processManager.logFailedWrite(file, error.message);
@@ -59,7 +59,7 @@ const cloneFile = async (
         }
       );
       return;
-    } else if (["html", "htm"].includes(file.extension)) {
+    } else if ([".html", ".htm"].includes(file.extension)) {
       const $ = cheerio.load(response.data);
 
       const links: string = $("a");
@@ -86,11 +86,11 @@ const cloneFile = async (
         const _image_link = $(image_link).attr("src");
         processLink(_image_link, urlObject, link_to_save, authorizedDomains);
       });
-    } else if (file.extension === "css") {
+    } else if (file.extension === ".css") {
       const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
 
       let match = myRegexp.exec(response.data);
-      while (match != null) {
+      while (match !== null) {
         processLink(match[2], urlObject, link_to_save);
         match = myRegexp.exec(response.data);
       }

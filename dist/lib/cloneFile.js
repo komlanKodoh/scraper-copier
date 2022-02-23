@@ -17,7 +17,7 @@ const writeFile_1 = __importDefault(require("./writeFile"));
 const downloadImg_1 = __importDefault(require("./downloadImg"));
 const processLink_1 = __importDefault(require("./processLink"));
 const ensurePath_1 = require("../utils/ensurePath");
-const contentTypeToFileExtension_1 = require("./contentTypeToFileExtension");
+const contentTypeToFileExtension_1 = __importDefault(require("./contentTypeToFileExtension"));
 const cheerio = require("cheerio");
 const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, void 0, function* () {
     const urlObject = new URL(url);
@@ -39,11 +39,10 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
         let link_to_save = [];
         // update of the previously guessed fileExtension to one that matches the response countertype
         const fileContentType = response.headers["content-type"];
-        const realFileExtension = (0, contentTypeToFileExtension_1.contentTypeToFileExtension)(fileContentType);
-        if (realFileExtension)
-            file.extension = realFileExtension;
-        if (["png", "jpg", "jpeg", "gif", "svg"].includes(file.extension)) {
-            yield (0, downloadImg_1.default)(url, path_1.default.join(file.directory, file.name), file, (error) => {
+        const realFileExtension = (0, contentTypeToFileExtension_1.default)(fileContentType);
+        // if (realFileExtension) file.extension = realFileExtension;
+        if ([".png", ".jpg", ".jpeg", ".gif", ".svg"].includes(file.extension)) {
+            yield (0, downloadImg_1.default)(url, path_1.default.join(file.directory, file.name + file.extension), file, (error) => {
                 if (error)
                     processManager.logFailedWrite(file, error.message);
                 else
@@ -51,7 +50,7 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
             });
             return;
         }
-        else if (["html", "htm"].includes(file.extension)) {
+        else if ([".html", ".htm"].includes(file.extension)) {
             const $ = cheerio.load(response.data);
             const links = $("a");
             const script = $("script");
@@ -74,10 +73,10 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
                 (0, processLink_1.default)(_image_link, urlObject, link_to_save, authorizedDomains);
             });
         }
-        else if (file.extension === "css") {
+        else if (file.extension === ".css") {
             const myRegexp = /url\(("|')*(.*?)("|')*\)/g;
             let match = myRegexp.exec(response.data);
-            while (match != null) {
+            while (match !== null) {
                 (0, processLink_1.default)(match[2], urlObject, link_to_save);
                 match = myRegexp.exec(response.data);
             }
@@ -101,4 +100,3 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
     }
 });
 exports.default = cloneFile;
-//# sourceMappingURL=cloneFile.js.map

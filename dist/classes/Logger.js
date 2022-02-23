@@ -65,4 +65,3 @@ exports.default = {
     color,
     logFileProcess,
 };
-//# sourceMappingURL=Logger.js.map

@@ -7,48 +7,49 @@ const getPathAndFileNameTestFunction = (url: string, root?: string) => {
 };
 
 const getBase64 = (str: string) => {
-  return Buffer.from(str).toString('base64')
+  return encodeURIComponent(str)
 } 
+
 describe("Obtain destination path and file name", () => {
   runTest(
     [
       {
         description: "should return normalized path and file name",
         input: ["https://test.com/daniel"],
-        expectedOutput: ["test.com/daniel", "index.html", "html"],
+        expectedOutput: ["test.com/daniel", "index", ".html"],
       },
       {
         description: "should return index.html if at website root",
         input: ["https://test.gov"],
-        expectedOutput: ["test.gov", "index.html", "html"],
+        expectedOutput: ["test.gov", "index", ".html"],
       },
       {
         description: "should ignore # link position",
         input: ["https://jonny.me#about"],
-        expectedOutput: ["jonny.me", "index.html", "html"],
+        expectedOutput: ["jonny.me", "index", ".html"],
       },
       {
         description: "should ignore url query",
         input: ["https://cool.me/daniel?number=different"],
         expectedOutput: [
           "cool.me/daniel",
-          "index" + getBase64("?number=different") + ".html",
-          "html",
+          "index" + getBase64("?number=different"),
+          ".html",
         ],
       },
 
       {
         description: "should return correct result",
         input: ["https://komlankodoh.com/#Home"],
-        expectedOutput: ["komlankodoh.com", "index.html", "html"],
+        expectedOutput: ["komlankodoh.com", "index", ".html"],
       },
       {
         description: "should return normalized path and file name",
         input: ["https://test.com/daniel/root?person=randomized#home"],
         expectedOutput: [
           "test.com/daniel/root",
-          "index" + getBase64("?person=randomized") + ".html",
-          "html",
+          "index" + getBase64("?person=randomized"),
+          ".html",
         ],
       },
       {
@@ -56,15 +57,15 @@ describe("Obtain destination path and file name", () => {
         input: ["https://test.com/daniel/root/?person=randomized#home"],
         expectedOutput: [
           "test.com/daniel/root",
-          "index" + getBase64("?person=randomized") + ".html",
-          "html",
+          "index" + getBase64("?person=randomized") ,
+          ".html",
         ],
       },
       {
         description:
           "should only consider last .[any letters] as file extension",
         input: ["https://test.com/daniel/root/styles.min.css", ""],
-        expectedOutput: ["test.com/daniel/root", "styles.min.css", "css"],
+        expectedOutput: ["test.com/daniel/root", "styles.min", ".css"],
       },
     ],
     getPathAndFileNameTestFunction

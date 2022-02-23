@@ -1,4 +1,7 @@
+console.log("main js is reqdu to jam")
+
 window.addEventListener("click", (e: any) => {
+  console.log(e.target)
   if (!e.target.href) return;
   // prevent routing if the element being clicked has a href prop.
 

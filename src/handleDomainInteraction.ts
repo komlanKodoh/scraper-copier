@@ -5,18 +5,20 @@ import createSqliteDb from "./utils/createSqliteDb";
 
 const actionDict = {
   domain_show: async (domainTracker: DomainTracker) => {
-      const scrappedDomains = await domainTracker.getAllDomains();
+    const scrappedDomains = await domainTracker.getAllDomains();
 
-      console.log(
-          `\n${scrappedDomains.join("\n")}\n`
-      )
+    console.log(`\n${scrappedDomains.join("\n")}\n`);
   },
 };
 
 const domainHandler = async (cli_args: any) => {
-  const db = await createSqliteDb(
-    cli_args.directory || path.join(__dirname, ".default_scraper.db"), () =>0
-  );
+  
+  const dbPath = cli_args.database
+    ? path.join(process.cwd(), cli_args.database)
+    : path.join(__dirname, ".default_scraper.db");
+
+  const db = await createSqliteDb(dbPath, () => null);
+
   if (!db)
     return console.log(
       Logger.color("could not connect to the database. ", "FgRed")

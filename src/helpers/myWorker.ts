@@ -5,7 +5,6 @@ self.addEventListener("install", () => {
 });
 
 self.addEventListener("fetch", function (event: any) {
-  console.log(event.request.path);
 
   const handler = async () => {
     const request = event.request;
@@ -27,8 +26,7 @@ self.addEventListener("fetch", function (event: any) {
     // more resources thus allowing it to take better routing decisions.
 
     const proxyURL  = `/proxy?request=${btoa(JSON.stringify(requestData))}`;
-
-    console.log(proxyURL)
+    console.log(request.headers)
 
     const response = await fetch(proxyURL);
     

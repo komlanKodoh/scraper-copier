@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseUrlQuery = exports.insertIn = exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
+exports.randomString = exports.parseUrlQuery = exports.insertIn = exports.firstEncounter = exports.setGlobal = exports.castArray = exports.createInsertValues = void 0;
 const createInsertValues = (links) => {
     let values = "";
     const len = links.length;
@@ -55,4 +55,13 @@ const parseUrlQuery = (urlQuery) => {
     });
 };
 exports.parseUrlQuery = parseUrlQuery;
-//# sourceMappingURL=index.js.map
+function randomString(length) {
+    var result = "";
+    var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+exports.randomString = randomString;

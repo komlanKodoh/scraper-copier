@@ -1,5 +1,7 @@
 "use strict";
+console.log("main js is reqdu to jam");
 window.addEventListener("click", (e) => {
+    console.log(e.target);
     if (!e.target.href)
         return;
     // prevent routing if the element being clicked has a href prop.
@@ -40,4 +42,3 @@ history.replaceState = ((originalReplaceState) => function replaceState(...arg) 
 window.addEventListener("popstate", () => {
     window.dispatchEvent(new Event("locationChange"));
 });
-//# sourceMappingURL=main.js.map

@@ -1,4 +1,5 @@
-import yargs from "yargs";
+import { blob } from "stream/consumers";
+import yargs, { boolean } from "yargs";
 const cli_args = yargs
   .command(
     "load <url> [dest]",
@@ -15,6 +16,7 @@ const cli_args = yargs
         })
         .option("database", {
           alias: "d",
+          type: "string",
           description: "choose the database to start the process from",
         })
         .option("roots", {
@@ -22,16 +24,16 @@ const cli_args = yargs
           type: "string",
           description: "supplemental root element to start the process from",
         })
-        .option("authorize-domain", {
-          alias: "d",
-          type: "array",
-          description:
-            "a list of authorized domain that the scrapper can extends to",
-        })
         .option("max-request-per-second", {
           alias: "m",
           type: "number",
           description: "",
+        })
+        .option("keep-history", {
+          alias: "h",
+          type: "boolean",
+          description:
+            "tells the scrapper if you want to continue using the previous urls.",
         });
     }
   )
@@ -56,6 +58,11 @@ const cli_args = yargs
           default: true,
           description:
             "Fetches a requested resource if it has not been fetched yet. ",
+        })
+        .option("reset-history", {
+          alias: "r",
+          type: "boolean",
+          description: "reset the history of previously scrapped link",
         });
     }
   )
@@ -87,6 +94,11 @@ const cli_args = yargs
       "reduce logging to essential information (under developments )",
     type: "boolean",
   })
+  .option("authorized-domain", {
+    alias: "d",
+    type: "array",
+    description: "a list of authorized domain that the scrapper can extends to",
+  })
 
   .help()
   .alias("help", "h").argv;
@@ -95,10 +107,12 @@ type cli_args = typeof cli_args & {
   domain: string;
   port: string;
   dest: string;
+  database: string;
+  "reset-history": boolean;
   "active-caching": boolean;
   "authorized-domain": string[];
   "max-request-per-second": string;
 };
 
-
 export default cli_args as cli_args;
+

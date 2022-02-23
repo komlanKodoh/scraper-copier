@@ -70,4 +70,3 @@ class Limiter {
 }
 exports.Limiter = Limiter;
 const limiter = new Limiter({ counterLoop: 5, max: 50 });
-//# sourceMappingURL=Limiter.js.map
