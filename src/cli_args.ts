@@ -1,5 +1,6 @@
-import { blob } from "stream/consumers";
-import yargs, { boolean } from "yargs";
+
+import yargs from "yargs";
+
 const cli_args = yargs
   .command(
     "load <url> [dest]",
@@ -21,7 +22,8 @@ const cli_args = yargs
         })
         .option("roots", {
           alias: "r",
-          type: "string",
+          default: [],
+          type: "array",
           description: "supplemental root element to start the process from",
         })
         .option("max-request-per-second", {
@@ -95,7 +97,7 @@ const cli_args = yargs
     type: "boolean",
   })
   .option("authorized-domain", {
-    alias: "d",
+    alias: "auth",
     type: "array",
     description: "a list of authorized domain that the scrapper can extends to",
   })
@@ -103,16 +105,33 @@ const cli_args = yargs
   .help()
   .alias("help", "h").argv;
 
-type cli_args = typeof cli_args & {
-  domain: string;
+type ProcessedCliArgs ={
+  _: string[];
   port: string;
   dest: string;
+  domain: string;
+  roots: string[];
   database: string;
   "reset-history": boolean;
   "active-caching": boolean;
-  "authorized-domain": string[];
+  "authorized-domain": RegExp[];
   "max-request-per-second": string;
 };
 
-export default cli_args as cli_args;
+const processedCliArgs = cli_args as unknown as ProcessedCliArgs;
+
+// process of regular expression strings passed for the authorized domains
+const emptyArray: any[] = [];
+processedCliArgs["authorized-domain"] = emptyArray
+.concat(
+  cli_args["authorized-domain"] || []
+)
+.map((domain) => new RegExp(domain, "i")) as RegExp[]
+
+
+// merge of unique url and array passed as roots (-r parameter);
+const uniqueURL = cli_args.url as string;
+if (uniqueURL) processedCliArgs.roots.push(uniqueURL);
+
+export default processedCliArgs;
 

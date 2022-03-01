@@ -22,7 +22,13 @@ const processLink = (link, remoteUrlOrigin, add_to, authorize = []) => {
         link.slice(0, 7) === "mailto:")
         return add_to;
     const allAuthorized = [...authorize, new RegExp(remoteUrlOrigin.hostname)];
-    const _link = new URL(link, remoteUrlOrigin.href);
+    let _link;
+    try {
+        _link = new URL(link, remoteUrlOrigin.href);
+    }
+    catch (err) {
+        return add_to;
+    }
     if (!allAuthorized.some((domainRegex) => domainRegex.test(_link.hostname)))
         return add_to;
     add_to.push(postProcess(_link.href));

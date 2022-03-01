@@ -1,12 +1,11 @@
-import { ScrapperFile } from "./../classes/ScrapperFile";
+
 import path from "path";
 import writeFile from "./writeFile";
 import downloadImg from "./downloadImg";
 import processLink from "./processLink";
 import { ensurePath } from "../utils/ensurePath";
 import ProcessManager from "../classes/ProcessManager";
-import getPathAndFileName from "./getPathAndFileName";
-import  contentTypeToFileExtension  from "./contentTypeToFileExtension";
+import contentTypeToFileExtension from "./contentTypeToFileExtension";
 
 const cheerio = require("cheerio");
 
@@ -46,7 +45,14 @@ const cloneFile = async (
     const fileContentType = response.headers["content-type"];
 
     const realFileExtension = contentTypeToFileExtension(fileContentType);
-    // if (realFileExtension) file.extension = realFileExtension;
+
+    // Add real content type to database if content type is different from what was initially inferred;
+    // This is very important for the server to work. 
+    if (realFileExtension !== null && realFileExtension !== file.extension) {
+      file.extension = realFileExtension;
+      scraperManager.setContentType(url, fileContentType);
+    }
+
 
     if ([".png", ".jpg", ".jpeg", ".gif", ".svg"].includes(file.extension)) {
       await downloadImg(
@@ -96,6 +102,7 @@ const cloneFile = async (
       }
     }
 
+
     await processManager.scraperManager.add(link_to_save);
 
     await writeFile(response.data, file, (error) => {
@@ -105,6 +112,7 @@ const cloneFile = async (
   } catch (error: any) {
     switch (error.code) {
       case "ERR_INVALID_URL":
+        console.log(error)
         processManager.logFailedWrite(
           file,
           "Could not load the file, Url is invalid"

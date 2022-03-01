@@ -20,6 +20,7 @@ export const config = {
 
 function proxy(url: string, res: any) {
   // return console.log("I crashed in here")
+
   request(url, undefined, (error, response, body) => {
     if (!error) return;
 
@@ -31,8 +32,6 @@ function proxy(url: string, res: any) {
         )
       );
     }
-
-    res.sendStatus(404);
   }).pipe(res);
   console.log(
     "File successfully forwarded to " +
@@ -44,18 +43,22 @@ function proxy(url: string, res: any) {
 const startServer = async (apiConfig: {
   port: number;
   activeDomain: string;
+  databasePath?: string;
   activeCaching: boolean;
   domainOfInterest: RegExp[];
 }) => {
   // loading configs to the local config object
   Object.assign(config, apiConfig);
 
+  // console.log(apiConfig.domainOfInterest, "THE DOMAIN OF INTERESTS");
+
   const processManager = new ProcessManager(DefaultDirectory);
 
   // path to the database to use for the process.
   // the database holds information like a mapping from domain to
   // local Directories is also used to saved link after scrapping remoteURLs;
-  const dbPath = path.join(__dirname, ".default_scraper.db");
+  const dbPath =
+    apiConfig.databasePath || path.join(__dirname, ".default_scraper.db");
 
   await processManager.initDb(dbPath);
   await processManager.initScraperManager([], false);
@@ -66,11 +69,17 @@ const startServer = async (apiConfig: {
   app.get<{}, {}, {}, { newDomain: "string" }>("/update-domain", (req, res) => {
     config.activeDomain = req.query.newDomain;
   });
+  app.get("/__domain__of__interest", (req, res) => {
+    res.status(200).json({
+      domain: apiConfig.domainOfInterest
+    })
+  })
 
   app.use("/helpers", express.static(path.join(__dirname, "helpers")));
-  app.get("/myWorker.js", (req, res) =>
-    res.sendFile(path.join(__dirname, "./helpers/myWorker.js"))
-  );
+  app.get("/__my_worker__.js", (req, res) => {
+    console.log("I am returning the worker file");
+    res.sendFile(path.join(__dirname, "./helpers/myWorker.js"));
+  });
 
   app.get<{}, {}, {}, { request: string }>("/proxy", async (req, res) => {
     // get the required from the url query;
@@ -84,7 +93,6 @@ const startServer = async (apiConfig: {
     } catch (err) {
       return console.log(
         Logger.color(`Failed to parse the requested resources:`, "FgRed")
-        // Logger.color(`${req.url.slice(50)}`, "FgGreen")
       );
     }
 
@@ -94,12 +102,11 @@ const startServer = async (apiConfig: {
 
     let file = processManager.createFile(
       originalRequest.url.replace(
-        `localhost:${config.port}`,
+        req.get("host"),
         config.activeDomain
       ),
       ""
     );
-
 
     if (!file)
       return res.status(404).send({
@@ -121,12 +128,11 @@ const startServer = async (apiConfig: {
 
       // We first find the corresponding file from the local machine, if the
       // file is found we send it as the response;
-      const fileSavedInStorage = await findFile(
-        directories,
-        file.remoteURL.href
-      );
-
-      console.log(fileSavedInStorage);
+      const [fileSavedInStorage, content_type] = await Promise.all([
+        findFile(directories,file),
+        // get content-type saved in db if any;
+        processManager.scraperManager.getContentType(file.remoteURL.href),
+      ]);
 
       if (fileSavedInStorage) {
         console.log(
@@ -134,12 +140,18 @@ const startServer = async (apiConfig: {
             Logger.color("LocalStorage      < -- >  ", "FgBlue") +
             Logger.color(file.remoteURL.href, "FgGreen")
         );
+
+        if (content_type) res.setHeader("Content-Type", content_type);
         res.sendFile(fileSavedInStorage);
         return;
       }
 
       // if the file is not found in the local storage,
       // we proxy the request to its original destination
+      console.log(
+        Logger.color("No file found", "FgBlue"),
+        "Forward to external servers"
+      );
       proxy(originalRequest.url, res);
 
       console.log(

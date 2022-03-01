@@ -1,6 +1,5 @@
 import DomainTracker from "../classes/DomainTracker";
-import Logger from "../classes/Logger";
-import { hostNameExists } from "./hostNameExists";
+
 
 export const domainIsValid = async (domainTracker: DomainTracker, domain: string) => {
   // const directories = await domainTracker.getRootDirectories(

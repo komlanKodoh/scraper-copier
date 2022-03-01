@@ -4,7 +4,17 @@ self.addEventListener("install", () => {
   );
 });
 
+const NO_PROXY_PATHS = [
+  "/__domain__of__interest",
+  "/helpers/main.js",
+  "/__my_worker__.js",
+  "/update-domain"
+]
+
 self.addEventListener("fetch", function (event: any) {
+
+  const requestPath = new URL(event.request.url).pathname;
+  if (NO_PROXY_PATHS.includes(requestPath)) return;
 
   const handler = async () => {
     const request = event.request;
@@ -26,7 +36,6 @@ self.addEventListener("fetch", function (event: any) {
     // more resources thus allowing it to take better routing decisions.
 
     const proxyURL  = `/proxy?request=${btoa(JSON.stringify(requestData))}`;
-    console.log(request.headers)
 
     const response = await fetch(proxyURL);
     

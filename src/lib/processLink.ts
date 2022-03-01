@@ -1,4 +1,3 @@
-import path from "path";
 
 const postProcess = (processedLink: string) => {
   // removes trailing "/" and location hash from a url string
@@ -30,8 +29,13 @@ const processLink = (
     return add_to;
 
   const allAuthorized = [...authorize, new RegExp(remoteUrlOrigin.hostname)];
-
-  const _link = new URL(link, remoteUrlOrigin.href);
+  
+  let _link: URL;
+  try {
+    _link = new URL(link, remoteUrlOrigin.href);
+  } catch (err) {
+    return add_to;
+  }
 
   if (!allAuthorized.some((domainRegex) => domainRegex.test(_link.hostname)))
     return add_to;

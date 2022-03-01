@@ -126,7 +126,6 @@ export default class ProcessManager {
       })
       .catch((error) => error.response)) as AxiosResponse<string, any> | null;
 
-      // console.log(Logger.color("Getting url " +  file.remoteURL.href, "FgBlue"))
 
     if (!axiosResponse?.data) {
       this.logFailedWrite(file, `Not Found`);
@@ -267,7 +266,7 @@ export default class ProcessManager {
    */
   createFile(url: string, rootDirectory?: string): ScrapperFile | null {
     try {
-      return new ScrapperFile(url, rootDirectory || this.destDirectory);
+      return new ScrapperFile(url, rootDirectory ?? this.destDirectory);
     } catch (err) {
       console.log(Logger.color("Invalid url, ", "FgRed"));
 

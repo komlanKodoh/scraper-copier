@@ -37,7 +37,6 @@ function proxy(url, res) {
         if (error.code === "EAI_AGAIN") {
             console.log(Logger_1.default.color(`Failed to proxy the request to ${url} Check your internet connection`, "FgRed"));
         }
-        res.sendStatus(404);
     }).pipe(res);
     console.log("File successfully forwarded to " +
         Logger_1.default.color("External servers  < -- >  ", "FgCyan") +
@@ -46,11 +45,12 @@ function proxy(url, res) {
 const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* () {
     // loading configs to the local config object
     Object.assign(exports.config, apiConfig);
+    // console.log(apiConfig.domainOfInterest, "THE DOMAIN OF INTERESTS");
     const processManager = new ProcessManager_1.default(DefaultDirectory);
     // path to the database to use for the process.
     // the database holds information like a mapping from domain to
     // local Directories is also used to saved link after scrapping remoteURLs;
-    const dbPath = path_1.default.join(__dirname, ".default_scraper.db");
+    const dbPath = apiConfig.databasePath || path_1.default.join(__dirname, ".default_scraper.db");
     yield processManager.initDb(dbPath);
     yield processManager.initScraperManager([], false);
     const domainTracker = yield processManager.initDomainTracker();
@@ -59,8 +59,16 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
     app.get("/update-domain", (req, res) => {
         exports.config.activeDomain = req.query.newDomain;
     });
+    app.get("/__domain__of__interest", (req, res) => {
+        res.status(200).json({
+            domain: apiConfig.domainOfInterest
+        });
+    });
     app.use("/helpers", express_1.default.static(path_1.default.join(__dirname, "helpers")));
-    app.get("/myWorker.js", (req, res) => res.sendFile(path_1.default.join(__dirname, "./helpers/myWorker.js")));
+    app.get("/__my_worker__.js", (req, res) => {
+        console.log("I am returning the worker file");
+        res.sendFile(path_1.default.join(__dirname, "./helpers/myWorker.js"));
+    });
     app.get("/proxy", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // get the required from the url query;
         let originalRequest;
@@ -69,13 +77,12 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
             originalRequest = JSON.parse(requestTargetURL);
         }
         catch (err) {
-            return console.log(Logger_1.default.color(`Failed to parse the requested resources:`, "FgRed")
-            // Logger.color(`${req.url.slice(50)}`, "FgGreen")
-            );
+            return console.log(Logger_1.default.color(`Failed to parse the requested resources:`, "FgRed"));
         }
         originalRequest.headers = req.headers;
         if (!(originalRequest === null || originalRequest === void 0 ? void 0 : originalRequest.url))
             return;
+        console.log(req.get("origin"), req.get("host"));
         let file = processManager.createFile(originalRequest.url.replace(`localhost:${exports.config.port}`, exports.config.activeDomain), "");
         if (!file)
             return res.status(404).send({
@@ -90,17 +97,23 @@ const startServer = (apiConfig) => __awaiter(void 0, void 0, void 0, function* (
             const directories = yield domainTracker.getRootDirectories(exports.config.activeDomain);
             // We first find the corresponding file from the local machine, if the
             // file is found we send it as the response;
-            const fileSavedInStorage = yield (0, findFile_1.findFile)(directories, file.remoteURL.href);
-            console.log(fileSavedInStorage);
+            const [fileSavedInStorage, content_type] = yield Promise.all([
+                (0, findFile_1.findFile)(directories, file),
+                // get content-type saved in db if any;
+                processManager.scraperManager.getContentType(file.remoteURL.href),
+            ]);
             if (fileSavedInStorage) {
                 console.log("File successfully served From  " +
                     Logger_1.default.color("LocalStorage      < -- >  ", "FgBlue") +
                     Logger_1.default.color(file.remoteURL.href, "FgGreen"));
+                if (content_type)
+                    res.setHeader("Content-Type", content_type);
                 res.sendFile(fileSavedInStorage);
                 return;
             }
             // if the file is not found in the local storage,
             // we proxy the request to its original destination
+            console.log(Logger_1.default.color("No file found", "FgBlue"), "Forward to external servers");
             proxy(originalRequest.url, res);
             console.log("File successfully served From  " +
                 Logger_1.default.color("Remote URL        < -- >  ", "FgBlue") +

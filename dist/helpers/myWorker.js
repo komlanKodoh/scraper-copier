@@ -11,7 +11,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 self.addEventListener("install", () => {
     console.log("I am the service worker, just here to say that I have been successfully installed");
 });
+const NO_PROXY_PATHS = [
+    "/__domain__of__interest",
+    "/helpers/main.js",
+    "/__my_worker__.js",
+    "/update-domain"
+];
 self.addEventListener("fetch", function (event) {
+    const requestPath = new URL(event.request.url).pathname;
+    if (NO_PROXY_PATHS.includes(requestPath))
+        return;
     const handler = () => __awaiter(this, void 0, void 0, function* () {
         const request = event.request;
         const requestData = {
@@ -29,7 +38,6 @@ self.addEventListener("fetch", function (event) {
         // to the discretion of proxy serve which has more Resources and is already processes more
         // more resources thus allowing it to take better routing decisions.
         const proxyURL = `/proxy?request=${btoa(JSON.stringify(requestData))}`;
-        console.log(request.headers);
         const response = yield fetch(proxyURL);
         return response;
     });

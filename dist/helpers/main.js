@@ -1,22 +1,42 @@
 "use strict";
-console.log("main js is reqdu to jam");
+// Domain Updater;
+fetch(`/update-domain?newDomain=${window.__current__domain__name}`, {
+    method: "GET",
+});
+fetch("/__domain__of__interest").then((res) => res.json().then((json) => console.log(json)));
+console.log("I am trying to update the current domain");
+// Domain Popup Box;
+setTimeout(() => {
+    const body = document.body;
+    const domainShower = document.createElement("div");
+    domainShower.innerHTML = `
+  <div style="position:fixed; top: 0; left: 0;">
+    The current domain is ${window.__current__domain__name}
+  </div>
+  `;
+    console.log(body);
+    console.log(domainShower);
+    body.appendChild(domainShower);
+}, 2000);
+//
 window.addEventListener("click", (e) => {
-    console.log(e.target);
     if (!e.target.href)
         return;
     // prevent routing if the element being clicked has a href prop.
     e.preventDefault();
+    const currentOrigin = window.__current__domain__name;
+    const nextOrigin = new URL(e.target.href).origin;
     const linkClicked = e.target;
-    if (/^https*:\/\/localhost:[0-9]+/.test(linkClicked.href)) {
+    if (new RegExp(currentOrigin, "i").test(nextOrigin)) {
         console.log("same origin ", linkClicked.href);
-        window.location.href = linkClicked.href;
+        window.location.href = `${window.location.origin}${new URL(linkClicked.href).pathname}`;
         return;
     }
-    window.location.href = `${window.location.origin}/?url=${linkClicked.href}&updateDomain=true`;
+    window.location.href = e.target.href;
 });
 if ("serviceWorker" in navigator) {
     // Register service worker to act as proxy between request and servers
-    navigator.serviceWorker.register("/myWorker.js", { scope: "/" }).then(function (registration) {
+    navigator.serviceWorker.register("/__my_worker__.js", { scope: "/" }).then(function (registration) {
         console.log("Service worker registration succeeded:");
     }, (error) => {
         console.log("Service worker registration failed:", error);

@@ -3,7 +3,6 @@ const fs = require("fs");
 import Logger from "../classes/Logger";
 import { ScrapperFile } from "../classes/ScrapperFile";
 import { insertIn } from "../utils";
-import { ensurePath } from "../utils/ensurePath";
 
 /**
  * Processes html before write to local path
@@ -13,10 +12,12 @@ import { ensurePath } from "../utils/ensurePath";
  */
 export function processHTML(HTML: string, file: FileObject): string {
   const scriptToInject =
-    `<script src='/helpers/main.js'></script>
+    `
      <script>
         window.__current__domain__name = "${file.remoteURL.hostname}";
-     </script>`;
+     </script>
+     <script src='/helpers/main.js'></script>
+     `;
 
   const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
 
@@ -52,14 +53,14 @@ const writeFile = async (
       callback({ message: "could not convert object file to json" });
       return;
     }
-  } else if (file.extension === "html") {
+  } else if (file.extension === ".html") {
     try {
       data = processHTML(data, file);
     } catch (err) {
       console.log(
         Logger.color(
           "- File : Could not inject js " + destination + "\n",
-          "FgRed"
+          "FgYellow"
         )
       );
     }

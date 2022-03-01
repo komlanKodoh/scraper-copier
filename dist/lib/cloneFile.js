@@ -40,7 +40,12 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
         // update of the previously guessed fileExtension to one that matches the response countertype
         const fileContentType = response.headers["content-type"];
         const realFileExtension = (0, contentTypeToFileExtension_1.default)(fileContentType);
-        // if (realFileExtension) file.extension = realFileExtension;
+        // Add real content type to database if content type is different from what was initially inferred;
+        // This is very important for the server to work. 
+        if (realFileExtension !== null && realFileExtension !== file.extension) {
+            file.extension = realFileExtension;
+            scraperManager.setContentType(url, fileContentType);
+        }
         if ([".png", ".jpg", ".jpeg", ".gif", ".svg"].includes(file.extension)) {
             yield (0, downloadImg_1.default)(url, path_1.default.join(file.directory, file.name + file.extension), file, (error) => {
                 if (error)
@@ -92,6 +97,7 @@ const cloneFile = (url, processManager, overrides) => __awaiter(void 0, void 0, 
     catch (error) {
         switch (error.code) {
             case "ERR_INVALID_URL":
+                console.log(error);
                 processManager.logFailedWrite(file, "Could not load the file, Url is invalid");
                 break;
             default:

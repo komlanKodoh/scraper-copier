@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.findFile = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const getPathAndFileName_1 = __importDefault(require("./getPathAndFileName"));
 /**
  * Given a list of root directories, and a remote url. This function returns
  *  the local equivalent of the remote file.
@@ -24,10 +23,9 @@ const getPathAndFileName_1 = __importDefault(require("./getPathAndFileName"));
  * @param url
  * @returns
  */
-function findFile(rootDirectories, url) {
+function findFile(rootDirectories, file) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [fileDirectory, fileName, fileExtension] = (0, getPathAndFileName_1.default)(new URL(url));
-        const rawFilePath = path_1.default.join(fileDirectory, fileName + fileExtension);
+        const rawFilePath = path_1.default.join(file.directory, file.name + file.extension);
         for (let i = 0; i < rootDirectories.length; i++) {
             const destDirectory = rootDirectories[i];
             const filePath = path_1.default.join(destDirectory, rawFilePath);

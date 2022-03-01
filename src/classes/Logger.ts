@@ -1,5 +1,4 @@
-import path from "path";
-import { getFileExtension } from "./../lib/getPathAndFileName";
+
 import { processManagerMetadata } from "./ProcessManager";
 
 //TODO: Turn this "class file " into a proper class using adequate class syntax;

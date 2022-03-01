@@ -1,6 +1,7 @@
+import { ScrapperFile } from './../classes/ScrapperFile';
 import fs from "fs";
 import path from "path";
-import getPathAndFileName from "./getPathAndFileName";
+
 
 
 /**
@@ -11,10 +12,9 @@ import getPathAndFileName from "./getPathAndFileName";
  * @param url 
  * @returns 
  */
-export async function findFile(rootDirectories: string[], url: string) {
-  const [fileDirectory, fileName, fileExtension] = getPathAndFileName(new URL(url));
+export async function findFile(rootDirectories: string[], file: ScrapperFile) {
 
-  const rawFilePath = path.join(fileDirectory, fileName + fileExtension);
+  const rawFilePath = path.join(file.directory, file.name + file.extension);
 
   for (let i = 0; i < rootDirectories.length; i++) {
     const destDirectory = rootDirectories[i];

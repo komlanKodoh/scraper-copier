@@ -1,4 +1,3 @@
-import Logger from "./Logger";
 
 /**
  * @param counterLoop something very very cool
@@ -88,4 +87,3 @@ export class Limiter {
   }
 }
 
-const limiter = new Limiter({ counterLoop: 5, max: 50 });

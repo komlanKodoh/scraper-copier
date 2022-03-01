@@ -24,10 +24,12 @@ const utils_1 = require("../utils");
  * @returns processed html string
  */
 function processHTML(HTML, file) {
-    const scriptToInject = `<script src='/helpers/main.js'></script>
+    const scriptToInject = `
      <script>
         window.__current__domain__name = "${file.remoteURL.hostname}";
-     </script>`;
+     </script>
+     <script src='/helpers/main.js'></script>
+     `;
     const matched = HTML.match(/<[^(<|>)]*?head[^(<|>)]*?>/);
     if (!(matched === null || matched === void 0 ? void 0 : matched.index)) {
         throw new Error("Head is not found.");
@@ -55,12 +57,12 @@ const writeFile = (data, file, callback) => __awaiter(void 0, void 0, void 0, fu
             return;
         }
     }
-    else if (file.extension === "html") {
+    else if (file.extension === ".html") {
         try {
             data = processHTML(data, file);
         }
         catch (err) {
-            console.log(Logger_1.default.color("- File : Could not inject js " + destination + "\n", "FgRed"));
+            console.log(Logger_1.default.color("- File : Could not inject js " + destination + "\n", "FgYellow"));
         }
     }
     yield fs.writeFile(destination, data, (err) => {

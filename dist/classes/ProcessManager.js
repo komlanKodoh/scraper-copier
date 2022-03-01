@@ -120,7 +120,6 @@ class ProcessManager {
                 },
             })
                 .catch((error) => error.response));
-            // console.log(Logger.color("Getting url " +  file.remoteURL.href, "FgBlue"))
             if (!(axiosResponse === null || axiosResponse === void 0 ? void 0 : axiosResponse.data)) {
                 this.logFailedWrite(file, `Not Found`);
             }
@@ -199,7 +198,7 @@ class ProcessManager {
      */
     createFile(url, rootDirectory) {
         try {
-            return new ScrapperFile_1.ScrapperFile(url, rootDirectory || this.destDirectory);
+            return new ScrapperFile_1.ScrapperFile(url, rootDirectory !== null && rootDirectory !== void 0 ? rootDirectory : this.destDirectory);
         }
         catch (err) {
             console.log(Logger_1.default.color("Invalid url, ", "FgRed"));

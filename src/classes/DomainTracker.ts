@@ -1,6 +1,5 @@
-import path from "path";
+
 import sqlite3 from "sqlite3";
-import getPathAndFileName from "../lib/getPathAndFileName";
 
 type domainRecord = {
   hostname: string;
@@ -72,6 +71,10 @@ export default class DomainTracker {
       );
     });
 
+    setInterval(() => {
+      this.backUp();
+    }, 1000);
+
     return this;
   }
 
@@ -120,8 +123,6 @@ export default class DomainTracker {
 
   getDirectories(hostname: string) {
     if (this.domainInMemory[hostname]) {
-      this.getDirectoriesFromDB(hostname);
-
       return [...this.domainInMemory[hostname]];
     }
     return this.getDirectoriesFromDB(hostname);
@@ -134,15 +135,13 @@ export default class DomainTracker {
   }
 
   getAllDomains(): Promise<string[]> {
-    
-    return new Promise((resolve ) => {
+    return new Promise((resolve) => {
       this.db.all(
         `SELECT DISTINCT hostname FROM domainTracker;`,
         (_, rows: domainRecord[]) => {
-
-          resolve( rows?.map(row => row.hostname) || []);
+          resolve(rows?.map((row) => row.hostname) || []);
         }
       );
-    })
+    });
   }
 }

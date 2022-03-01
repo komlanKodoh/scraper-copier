@@ -22,7 +22,8 @@ const cli_args = yargs_1.default
     })
         .option("roots", {
         alias: "r",
-        type: "string",
+        default: [],
+        type: "array",
         description: "supplemental root element to start the process from",
     })
         .option("max-request-per-second", {
@@ -86,10 +87,20 @@ const cli_args = yargs_1.default
     type: "boolean",
 })
     .option("authorized-domain", {
-    alias: "d",
+    alias: "auth",
     type: "array",
     description: "a list of authorized domain that the scrapper can extends to",
 })
     .help()
     .alias("help", "h").argv;
-exports.default = cli_args;
+const processedCliArgs = cli_args;
+// process of regular expression strings passed for the authorized domains
+const emptyArray = [];
+processedCliArgs["authorized-domain"] = emptyArray
+    .concat(cli_args["authorized-domain"] || [])
+    .map((domain) => new RegExp(domain, "i"));
+// merge of unique url and array passed as roots (-r parameter);
+const uniqueURL = cli_args.url;
+if (uniqueURL)
+    processedCliArgs.roots.push(uniqueURL);
+exports.default = processedCliArgs;

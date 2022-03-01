@@ -61,6 +61,9 @@ class DomainTracker {
             yield new Promise((resolve, reject) => {
                 this.db.run(`CREATE TABLE IF NOT EXISTS domainTracker ( hostname VARCHAR(200), directory VARCHAR(500) UNIQUE )`, () => resolve());
             });
+            setInterval(() => {
+                this.backUp();
+            }, 1000);
             return this;
         });
     }
@@ -93,7 +96,6 @@ class DomainTracker {
     }
     getDirectories(hostname) {
         if (this.domainInMemory[hostname]) {
-            this.getDirectoriesFromDB(hostname);
             return [...this.domainInMemory[hostname]];
         }
         return this.getDirectoriesFromDB(hostname);
@@ -107,7 +109,7 @@ class DomainTracker {
     getAllDomains() {
         return new Promise((resolve) => {
             this.db.all(`SELECT DISTINCT hostname FROM domainTracker;`, (_, rows) => {
-                resolve((rows === null || rows === void 0 ? void 0 : rows.map(row => row.hostname)) || []);
+                resolve((rows === null || rows === void 0 ? void 0 : rows.map((row) => row.hostname)) || []);
             });
         });
     }

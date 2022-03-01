@@ -1,9 +1,5 @@
 import { createInsertValues } from "../utils";
-import { ensurePath } from "../utils/ensurePath";
-import { sql } from "../utils/sql";
-import Logger from "./Logger";
 import sqlite3 from "sqlite3";
-const path = require("path");
 
 export default class ScraperManager {
   name: string;
@@ -76,14 +72,6 @@ export default class ScraperManager {
    * @returns a promise with link object
    */
   public findNext = (limit?: number) => {
-    let query = `
-    SELECT  *
-    FROM  "${this.tableName}" 
-    WHERE seen = 0
-    ORDER BY popularity DESC
-    `;
-
-    if (limit) query += `LIMIT ${limit}`;
 
     return new Promise((resolve, reject) => {
       this.db.all(
@@ -117,7 +105,7 @@ export default class ScraperManager {
 
     await new Promise<void>((resolve, reject) => {
       this.db.run(
-        `CREATE TABLE IF NOT EXISTS "${this.tableName}" ( link VARCHAR(200) UNIQUE, popularity INT, seen boolean DEFAULT 0)`,
+        `CREATE TABLE IF NOT EXISTS "${this.tableName}" ( link VARCHAR(200) UNIQUE, popularity INT, seen boolean DEFAULT 0, content_type VARCHAR(200) )`,
         (error) => {
           if (error) throw error;
 
@@ -179,7 +167,7 @@ export default class ScraperManager {
   };
 
   find(link: string) {
-    return new Promise<link|null>((resolve, reject) => {
+    return new Promise<link | null>((resolve, reject) => {
       this.db.all(
         `
             SELECT * FROM  "${this.tableName}"
@@ -191,6 +179,40 @@ export default class ScraperManager {
           }
 
           resolve(rows[0]);
+        }
+      );
+    });
+  }
+
+  setContentType(link: string, content_type: string) {
+    return new Promise<link | null>((resolve, reject) => {
+      this.db.run(
+        `
+            UPDATE "${this.tableName}"
+            SET content_type="${content_type}"
+            WHERE link = "${link}";
+          `,
+        (error) => {
+          if (error) throw error;
+        }
+      );
+    });
+  }
+
+  getContentType(link: string) {
+    return new Promise<string | null>((resolve, reject) => {
+      this.db.all(
+        `
+            SELECT content_type 
+            FROM "${this.tableName}"
+            WHERE link = "${link}";
+          `,
+        (_, rows: link[]) => {
+          if (!rows) {
+            return resolve(null);
+          }
+
+          resolve(rows[0]?.content_type || null);
         }
       );
     });

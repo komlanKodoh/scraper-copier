@@ -1,11 +1,7 @@
 import cloneFile from "./lib/cloneFile";
 import path from "path";
-import Logger from "./classes/Logger";
 import ProcessManager from "./classes/ProcessManager";
-import ScraperManager from "./classes/ScraperManager";
 import { ensurePath } from "./utils/ensurePath";
-
-var axios_request = { current: 0 };
 
 /**
  * Clone a specific number of unseen files to local directories.
@@ -29,13 +25,21 @@ const cloneRemoteUrls = async (
   return true;
 };
 
-const start = async (
-  startingURls: string[],
-  destDirectory: string,
-  maxRequestPerSecond: number = 5,
-  dataBasePath?: string,
-  resetLink?: boolean
-) => {
+type StarterConfig = {
+  startingURls: string[];
+  destDirectory: string;
+  maxRequestPerSecond: number;
+  dataBasePath?: string;
+  resetLink?: boolean;
+};
+
+const start = async ({
+  resetLink,
+  startingURls,
+  dataBasePath,
+  destDirectory,
+  maxRequestPerSecond,
+}: StarterConfig) => {
   const dbPath = dataBasePath || path.join(__dirname, ".default_scraper.db");
 
   await ensurePath(path.dirname(dbPath));
@@ -45,7 +49,7 @@ const start = async (
   }).init({
     dbPath,
     scraperRootUrls: startingURls,
-    resetLink
+    resetLink,
   });
 
   process.on("SIGINT", async () => {

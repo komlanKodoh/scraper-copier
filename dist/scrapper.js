@@ -16,7 +16,6 @@ const cloneFile_1 = __importDefault(require("./lib/cloneFile"));
 const path_1 = __importDefault(require("path"));
 const ProcessManager_1 = __importDefault(require("./classes/ProcessManager"));
 const ensurePath_1 = require("./utils/ensurePath");
-var axios_request = { current: 0 };
 /**
  * Clone a specific number of unseen files to local directories.
  *
@@ -32,7 +31,7 @@ const cloneRemoteUrls = (numberOfUrls, processManager) => __awaiter(void 0, void
     yield Promise.all(cloningPromises);
     return true;
 });
-const start = (startingURls, destDirectory, maxRequestPerSecond = 5, dataBasePath, resetLink) => __awaiter(void 0, void 0, void 0, function* () {
+const start = ({ resetLink, startingURls, dataBasePath, destDirectory, maxRequestPerSecond, }) => __awaiter(void 0, void 0, void 0, function* () {
     const dbPath = dataBasePath || path_1.default.join(__dirname, ".default_scraper.db");
     yield (0, ensurePath_1.ensurePath)(path_1.default.dirname(dbPath));
     const processManager = yield new ProcessManager_1.default(destDirectory, {
@@ -40,7 +39,7 @@ const start = (startingURls, destDirectory, maxRequestPerSecond = 5, dataBasePat
     }).init({
         dbPath,
         scraperRootUrls: startingURls,
-        resetLink
+        resetLink,
     });
     process.on("SIGINT", () => __awaiter(void 0, void 0, void 0, function* () {
         yield processManager.cleanExit();

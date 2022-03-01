@@ -6,8 +6,8 @@ import cli_args from "./cli_args";
 import server from "./server";
 import path from "path";
 import Logger from "./classes/Logger";
-import { showHidden } from "yargs";
 import domainHandler from "./handleDomainInteraction";
+
 
 if (process.platform === "win32") {
   var rl = require("readline").createInterface({
@@ -23,49 +23,40 @@ if (process.platform === "win32") {
 
 switch (cli_args._[0]) {
   case "load":
-    const startingUrls = ([cli_args.url].concat(cli_args.roots || []) ||
-      []) as string[];
-
     setGlobal("_target_directory", cli_args.dest);
 
-    const emptyArray: string[] = [];
     setGlobal(
       "_authorized_domain",
-      emptyArray
-        .concat(
-          cli_args["authorized-domain"] || [],
-          startingUrls.map((url: string) => new URL(url).hostname as string)
+      // adding domain from which the initial urls are fetched from;
+      cli_args["authorized-domain"].concat(
+        cli_args.roots.map(
+          (url: string) => new RegExp(new URL(url).hostname as string, "i")
         )
-        .map((domain) => new RegExp(domain, "i")) as RegExp[]
+      )
     );
 
-    const dataBasePath = cli_args.database ? path.join(process.cwd(), cli_args.database[0] || "") : undefined
+    const dataBasePath = cli_args.database
+      ? path.join(process.cwd(), cli_args.database[0] || "")
+      : undefined;
 
-    scrapper.start(
-      startingUrls,
-      path.join(process.cwd(), cli_args.dest || ""),
-      parseInt(cli_args["max-request-per-second"]),
+    scrapper.start({
       dataBasePath,
-      cli_args["reset-history"]
-    );
+      startingURls: cli_args.roots,
+      resetLink: cli_args["reset-history"],
+      destDirectory: path.join(process.cwd(), cli_args.dest || ""),
+      maxRequestPerSecond: parseInt(cli_args["max-request-per-second"] || "5"),
+    });
+
     break;
 
   case "serve":
-
-    const _emptyArray: string[] = [];
-
-    const domainOfInterest = _emptyArray
-    .concat(
-      cli_args["authorized-domain"] || []
-    )
-    .map( (domain) => new RegExp(domain, "i")) as RegExp[] ;
-
     server.start({
       port: parseInt(cli_args.port),
       activeDomain: cli_args["domain"],
       activeCaching: cli_args["active-caching"],
-      domainOfInterest: domainOfInterest
+      domainOfInterest: cli_args["authorized-domain"],
     });
+
     break;
 
   case "domain":
@@ -79,3 +70,6 @@ switch (cli_args._[0]) {
       " to get a list of available command :).\n"
     );
 }
+
+
+
