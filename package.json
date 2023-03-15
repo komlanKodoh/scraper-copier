@@ -21,7 +21,7 @@
     "express": "^4.17.2",
     "mysql2": "^2.3.3",
     "pkg": "^5.5.2",
-    "sqlite3": "^5.0.2",
+    "sqlite3": "^5.1.5",
     "yargs": "^17.3.1"
   },
   "devDependencies": {
