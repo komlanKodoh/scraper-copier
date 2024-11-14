@@ -18,7 +18,7 @@
     "@types/request": "^2.48.8",
     "axios": "^0.24.0",
     "cheerio": "^1.0.0-rc.10",
-    "express": "^4.17.3",
+    "express": "^4.21.1",
     "mysql2": "^2.3.3",
     "pkg": "^5.8.1",
     "sqlite3": "^5.0.2",
